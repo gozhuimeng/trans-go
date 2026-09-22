@@ -1,10 +1,10 @@
 # 发布 workflow。
 #
 # 发版流程（不需要改本文件）：
-#   1. 重写 RELEASE_NOTES.md —— 它的整个内容就是 Release 正文
+#   1. 重写 RELEASE_NOTES.md：它的整个内容就是 Release 正文
 #   2. git commit && git tag v<版本号> && git push --follow-tags
 #
-# 产物：musl 静态编译的单文件二进制，打包成 tar.gz（含 README / LICENSE / docs）
+# 产物：musl 静态编译的单文件二进制，打包成 tar.gz（含二进制和 LICENSE），
 # 附带 .sha256 校验和。正文取自该 tag 对应提交里的 RELEASE_NOTES.md。
 
 name: Release
@@ -117,7 +117,7 @@ jobs:
 
           # 正文 = RELEASE_NOTES.md + 自动拼的文档链接。
           #
-          # 链接在这里拼而不出现在 RELEASE_NOTES.md 里，是因为相对链接在 Release 页面
+          # 链接在这里拼、不写进 RELEASE_NOTES.md，是因为相对链接在 Release 页面
           # 的解析基准是默认分支而不是当前 tag，文档一挪就会指错。workflow 天然知道
           # 仓库地址和 tag，拼出来的绝对链接在 fork 和仓库搬家后也照样成立。
           repo="https://github.com/${{ github.repository }}"

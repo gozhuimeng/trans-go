@@ -1,7 +1,7 @@
 //! 任意 OpenAI 兼容的 `/chat/completions` 接口。
 //!
 //! OpenAI / DeepSeek / 硅基流动 / Groq / OpenRouter / 本地 Ollama 都能用。
-//! 翻译质量上限最高，也能顺便润色、术语统一、加注音标。
+//! 翻译质量上限最高，也能顺便润色、统一术语、加注音标。
 
 use async_trait::async_trait;
 

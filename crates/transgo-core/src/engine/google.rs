@@ -95,7 +95,7 @@ impl Engine for Google {
             let msg = util::message_of(&got.json).unwrap_or_else(|| clip(&got.raw, 200));
             let hint = match got.status.as_u16() {
                 400 => "（API Key 无效或请求格式有问题）",
-                403 => "（API Key 无权限 —— 需在 GCP 里启用 Cloud Translation API）",
+                403 => "（API Key 无权限，需在 GCP 里启用 Cloud Translation API）",
                 429 => "（配额已用尽）",
                 _ => "",
             };

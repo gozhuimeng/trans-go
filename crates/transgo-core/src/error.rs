@@ -6,13 +6,13 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("引擎「{0}」未配置 —— 运行 `transgo config` 填入 API Key，或运行 `transgo engines` 查看申请地址")]
+    #[error("引擎「{0}」未配置，用 transgo config 填入 API Key，申请地址看 transgo engines")]
     NotConfigured(&'static str),
 
-    #[error("未知引擎「{0}」，可用引擎见 `transgo engines`")]
+    #[error("未知引擎「{0}」，可用引擎见 transgo engines")]
     UnknownEngine(String),
 
-    #[error("未知语种代码「{0}」，可用语种见 `transgo lang`")]
+    #[error("未知语种代码「{0}」，可用语种见 transgo lang")]
     UnknownLang(String),
 
     #[error("引擎「{engine}」不支持 {from} → {to} 这个方向")]

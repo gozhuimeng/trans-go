@@ -75,7 +75,7 @@ fn normalize_argv() -> Vec<OsString> {
 
 const LONG_ABOUT: &str = r#"轻量快速的翻译工具，CLI 优先，Wayland / Hyprland 友好。
 
-stdout 只有译文本身，元信息一律走 stderr，可以直接接管道。
+stdout 只有译文本身，元信息一律走 stderr，可以直接进管道。
 
 示例：
   transgo "知识就是力量"          中英方向自动决策
@@ -366,7 +366,7 @@ async fn cmd_engines(a: EnginesArgs) -> Result<(), Error> {
     if a.test || a.verbose {
         println!();
     }
-    println!("`*` = 已配置。默认引擎按上述顺序取第一个已配置项，可用 `transgo config set default.engine <id>` 固定。");
+    println!("* = 已配置。默认引擎按上述顺序取第一个已配置项，可用 transgo config set default.engine <id> 固定。");
     Ok(())
 }
 
@@ -407,7 +407,7 @@ fn cmd_config(action: ConfigCmd) -> Result<(), Error> {
         ConfigCmd::Init { force } => {
             if path.exists() && !force {
                 return Err(Error::Usage(format!(
-                    "{} 已存在。加 --force 覆盖，或用 `transgo config set` 修改单项",
+                    "{} 已存在。加 --force 覆盖，或用 transgo config set 修改单项",
                     path.display()
                 )));
             }
@@ -442,11 +442,11 @@ fn cmd_config(action: ConfigCmd) -> Result<(), Error> {
 }
 
 const TEMPLATE: &str = r#"# transgo 配置文件
-# 用 `transgo config set <key> <value>` 修改单项更安全；所有键都可用环境变量
-# TRANSGO_* 覆盖，例如 TRANSGO_DEEPL_API_KEY。环境变量优先于本文件。
+# 改单项建议用 transgo config set <key> <value>，比手改文件稳。所有键都能用环境变量
+# TRANSGO_* 覆盖，例如 TRANSGO_DEEPL_API_KEY，环境变量优先于本文件。
 
 [default]
-# 默认引擎 id（见 `transgo engines`）。留空则按优先级取第一个已配置的。
+# 默认引擎 id（见 transgo engines）。留空则按优先级取第一个已配置的。
 engine = ""
 # 目标语种。auto = 中英互译（中文译英文，其余一律译中文）
 to = "auto"
@@ -456,7 +456,7 @@ from = "auto"
 timeout_secs = 15
 
 # ---- DeepL：质量最好，免费 50 万字符/月 ----
-# https://www.deepl.com/pro-api 注册即可拿 Key，免费 Key 以 `:fx` 结尾
+# https://www.deepl.com/pro-api 注册即可拿 Key，免费 Key 以 :fx 结尾
 [deepl]
 api_key = ""
 

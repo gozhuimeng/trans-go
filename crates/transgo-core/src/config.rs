@@ -134,7 +134,7 @@ pub struct Config {
 impl Config {
     /// 只读配置文件（不存在则返回默认值），**不**叠加环境变量。
     ///
-    /// 写回场景必须用这个 —— 否则会把当前 shell 里的 `TRANSGO_*` 一并持久化进文件。
+    /// 写回场景必须用这个，否则会把当前 shell 里的 `TRANSGO_*` 一并持久化进文件。
     pub fn load_file() -> Result<Self> {
         let path = config_path();
         if path.is_file() {
@@ -159,7 +159,7 @@ impl Config {
         }
         let raw = toml::to_string_pretty(self)
             .map_err(|e| Error::Config(format!("序列化失败: {e}")))?;
-        let banner = "# transgo 配置文件\n# 键的含义见 `transgo config list`，环境变量 TRANSGO_* 可覆盖同名项。\n\n";
+        let banner = "# transgo 配置文件\n# 键的含义见 transgo config list，环境变量 TRANSGO_* 可覆盖同名项。\n\n";
         std::fs::write(path, format!("{banner}{raw}"))?;
         #[cfg(unix)]
         {

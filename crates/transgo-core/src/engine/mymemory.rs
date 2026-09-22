@@ -1,4 +1,4 @@
-//! MyMemory —— 免注册的翻译记忆库接口，做零配置兜底。
+//! MyMemory · 免注册的翻译记忆库接口，做零配置兜底。
 //!
 //! 接口文档 <https://mymemory.translated.net/doc/spec.php>
 //! 免费额度：匿名 5 千字符/天，留邮箱后 5 万字符/天。
@@ -109,7 +109,7 @@ impl Engine for MyMemory {
 
         // `responseData.translatedText` 是文档指定的主译文字段。
         // `matches[]` 是翻译记忆库命中列表，同一段原文可能同时命中多条记录（比如 "hello"
-        // 既有 "你好" 也有 "您好"），而且排序在不同请求间会漂移 —— 所以只能拿它当备选。
+        // 既有 "你好" 也有 "您好"），而且排序在不同请求间会漂移，所以只能拿它当备选。
         let primary = got
             .json
             .pointer("/responseData/translatedText")

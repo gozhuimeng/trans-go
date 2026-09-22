@@ -3,7 +3,7 @@
 //! 接口文档 <https://api.fanyi.baidu.com/doc_bd/21>
 //! 免费额度：标准版 5 万字符/月；完成个人认证切到**高级版**后 100 万字符/月。
 //!
-//! 签名是 `MD5(appid + q + salt + key)`，`q` 取**原始未 URL 编码**的原文 —— 编码后再算会得到 54001。
+//! 签名是 `MD5(appid + q + salt + key)`，`q` 取**原始未 URL 编码**的原文，编码后再算会得到 54001。
 
 use async_trait::async_trait;
 use md5::{Digest, Md5};
@@ -156,8 +156,8 @@ impl Engine for Baidu {
                 .map(clip_300)
                 .unwrap_or_else(|| "未知错误".into());
             let hint = match code.as_str() {
-                "54001" => "（签名错误 —— 检查 appid / 密钥，注意 q 不能预先 URL 编码）",
-                "52003" => "（未授权用户 —— 检查 appid）",
+                "54001" => "（签名错误：检查 appid / 密钥，注意 q 不能预先 URL 编码）",
+                "52003" => "（未授权用户，检查 appid）",
                 "54003" | "54005" => "（访问频率受限）",
                 "54004" => "（账户余额不足）",
                 "58001" => "（译文语言方向不支持）",

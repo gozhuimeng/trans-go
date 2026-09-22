@@ -1,5 +1,5 @@
 <!--
-  这份文件是 GitHub Release 正文的**发版说明部分**，由 .github/workflows/release.yml
+  这份文件是 GitHub Release 正文的发版说明部分，由 .github/workflows/release.yml
   读取。文末的「文档」章节是 workflow 自动拼上去的（链接要指向具体 tag，不能写死在这里），
   所以这里只写发版说明本身。
 
@@ -19,20 +19,20 @@
 
 ## 新增
 
-- 翻译命令行。`transgo "知识就是力量"` 直译，`echo "good morning" | transgo` 走管道。
-  stdout 只有译文本身，元信息一律走 stderr，可以直接接 `wl-copy`、`rofi`、脚本
+- 翻译走命令行。`transgo "知识就是力量"` 传文本就译，`echo "good morning" | transgo` 走管道。
+  stdout 只有译文本身，元信息一律走 stderr，接 `wl-copy` 或自己的脚本都不脏
 - 10 个翻译引擎，全是提供商官方接口，不用逆向网页版的反代：
   DeepL、腾讯云、火山引擎、阿里云、百度、Azure、Google Cloud、有道、任意 OpenAI 兼容接口、MyMemory
 - 免费额度从 5 万到 500 万字符/月不等。不填 Key 的引擎自动跳过，
   零配置也能用（MyMemory 免注册兜底）
 - 语种方向自动决策：中文译英文，其余译中文。判定看整段字符构成比例，不看首字，
   所以「iPhone手机很好用」这种以英文开头的中文不会被误判。
-  出问题时 `-t` / `-f` 可以手动指定
+  真判错了，`-t` / `-f` 手动指定
 - 各家语种代码差异统一屏蔽了。百度的 `jp`、有道的 `zh-CHS`、火山的 `zh-Hant`、
   Azure 的 `zh-Hans` 都不用记，只管写 `ja` / `zh-TW`
-- `engines` 子命令列出引擎、免费额度、配置状态，`--test` 会实发请求验证 Key 可用
-- `config` 子命令管理配置，`init` 生成带注释的模板，写入后权限自动收紧到 600
-- `lang` 子命令列出语种，`-e` 可以只看某个引擎支持的范围
+- `engines` 列出引擎、免费额度和配置状态，加 `--test` 会实发请求验证 Key 能不能用
+- 配置归 `config` 管，`init` 生成带注释的模板，写入后权限自动收紧到 600
+- `lang` 列语种，`-e` 可以只看某个引擎支持的范围
 
 ## 使用
 

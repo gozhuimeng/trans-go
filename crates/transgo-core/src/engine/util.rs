@@ -10,7 +10,7 @@ pub struct Fetched {
     pub raw: String,
 }
 
-/// 读响应体。**不**在这里判定成败 —— 有些引擎 HTTP 200 里也带错误，交给各引擎自己看。
+/// 读响应体。**不**在这里判定成败：有些引擎 HTTP 200 里也带错误，交给各引擎自己看。
 pub async fn fetch(engine: &'static str, resp: reqwest::Response) -> Result<Fetched> {
     let status = resp.status();
     let raw = resp.text().await?;
