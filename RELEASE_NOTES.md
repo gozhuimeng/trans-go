@@ -1,7 +1,11 @@
 <!--
-  这份文件是 GitHub Release 正文的发版说明部分，由 .github/workflows/release.yml
-  读取。文末的「文档」章节是 workflow 自动拼上去的（链接要指向具体 tag，不能写死在这里），
+  这份文件是 GitHub Release 正文的发版说明部分，由 .github/workflows/release.yml 读取。
+  文末的「文档」章节是 workflow 自动拼上去的（链接要指向具体 tag，不能写死在这里），
   所以这里只写发版说明本身。
+
+  ⚠️ 正文格式：
+     - **不要以 `# transgo x.y.z` 开头**。Release 页面的标题已经是版本号了，再写一遍是重复。
+     - **不要写概括性的开场白**。读者点进 Release 就是来看改动细节的，直接从 `## 新增` 开始。
 
   发版流程：
     1. 重写本文件，写清这次的新增功能和改动
@@ -12,10 +16,6 @@
   workflow 会编译 x86_64 musl 静态二进制、打包、算校验和，然后建 Release 并把产物挂上去。
   同一份 workflow 能一直用下去，发新版不需要改它。
 -->
-
-# transgo 0.1.0
-
-第一个版本。命令行翻译工具，接 10 个官方翻译接口，Wayland / Hyprland 下不用跟全局快捷键较劲。
 
 ## 新增
 
