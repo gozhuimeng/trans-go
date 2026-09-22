@@ -1,0 +1,159 @@
+# 发布 workflow。
+#
+# 发版流程（不需要改本文件）：
+#   1. 重写 RELEASE_NOTES.md —— 它的整个内容就是 Release 正文
+#   2. git commit && git tag v<版本号> && git push --follow-tags
+#
+# 产物：musl 静态编译的单文件二进制，打包成 tar.gz（含 README / LICENSE / docs）
+# 附带 .sha256 校验和。正文取自该 tag 对应提交里的 RELEASE_NOTES.md。
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的 tag，例如 v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  TARGET: x86_64-unknown-linux-musl
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # 解析版本号。必须在 checkout 之前做，因为 checkout 要按 tag 取代码。
+      - name: 确定版本
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          case "$tag" in
+            v[0-9]*) ;;
+            *) echo "::error::tag 需以 v 开头，当前是 '$tag'"; exit 1 ;;
+          esac
+
+          version="${tag#v}"
+          prerelease=false
+          # 版本号里带 - 的视作预发布，例如 v0.2.0-rc1
+          case "$version" in
+            *-*) prerelease=true ;;
+          esac
+
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "archive=transgo-$version-x86_64-linux-musl"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.tag }}
+
+      - name: 装 musl 工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          rustup target add "$TARGET"
+
+      - name: Lint
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: 测试
+        run: cargo test --locked
+
+      - name: 静态编译
+        run: cargo build --release --locked --target "$TARGET"
+
+      # musl 的意义就在于零依赖，这里把「确实是静态链接」作为发布门槛卡住，
+      # 免得哪天有依赖悄悄把动态库带进来才发现。
+      #
+      # 注意 `file` 对静态可执行文件有两种说法：传统静态是 "statically linked"，
+      # 开了 PIE 的静态是 "static-pie linked"，两种都要认。
+      - name: 确认静态链接
+        run: |
+          bin="target/$TARGET/release/transgo"
+          file "$bin"
+          if file "$bin" | grep -qE "statically linked|static-pie linked"; then
+            echo "确认是静态链接"
+          else
+            echo "::error::产物不是静态链接，musl 目标失去了意义"
+            ldd "$bin" || true
+            exit 1
+          fi
+
+      # 只打二进制和 LICENSE。文档不进压缩包，读的人直接看 Release 正文和仓库。
+      # LICENSE 必须带上：MIT 要求版权声明随副本一起分发。
+      - name: 打包
+        run: |
+          archive="${{ steps.meta.outputs.archive }}"
+          mkdir -p "dist/$archive"
+          cp "target/$TARGET/release/transgo" "dist/$archive/"
+          cp LICENSE "dist/$archive/"
+          tar -C dist -czf "dist/$archive.tar.gz" "$archive"
+          (cd dist && sha256sum "$archive.tar.gz" > "$archive.tar.gz.sha256")
+          ls -lh dist
+
+      - name: 发布到 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.meta.outputs.tag }}"
+          version="${{ steps.meta.outputs.version }}"
+          archive="${{ steps.meta.outputs.archive }}"
+
+          # 正文 = RELEASE_NOTES.md + 自动拼的文档链接。
+          #
+          # 链接在这里拼而不出现在 RELEASE_NOTES.md 里，是因为相对链接在 Release 页面
+          # 的解析基准是默认分支而不是当前 tag，文档一挪就会指错。workflow 天然知道
+          # 仓库地址和 tag，拼出来的绝对链接在 fork 和仓库搬家后也照样成立。
+          repo="https://github.com/${{ github.repository }}"
+          notes=/tmp/release-notes.md
+          cp RELEASE_NOTES.md "$notes"
+          {
+            echo
+            echo "## 文档"
+            echo
+            echo "完整文档在仓库里："
+            echo
+            echo "- [README]($repo/blob/$tag/README.md)：特性、安装、用法、配置"
+            echo "- [翻译引擎申请与配置]($repo/blob/$tag/docs/engines.md)：10 家 API Key 怎么申请，有什么坑"
+            echo "- [Hyprland / Wayland 桌面集成]($repo/blob/$tag/docs/hyprland.md)：快捷键绑定、实用脚本"
+            echo "- [常见问题与故障排查]($repo/blob/$tag/docs/troubleshooting.md)：报错信息对照"
+            echo "- [实现说明]($repo/blob/$tag/docs/architecture.md)：给改代码或加引擎的人"
+          } >> "$notes"
+
+          # 重复跑同一个 tag 时只覆盖产物，不重建 Release，保留原有的评论和下载计数
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag 已存在，覆盖产物"
+            gh release upload "$tag" \
+              "dist/$archive.tar.gz" "dist/$archive.tar.gz.sha256" \
+              --clobber
+            exit 0
+          fi
+
+          if [ "${{ steps.meta.outputs.prerelease }}" = "true" ]; then
+            extra=(--prerelease)
+          else
+            extra=()
+          fi
+
+          gh release create "$tag" \
+            "dist/$archive.tar.gz" "dist/$archive.tar.gz.sha256" \
+            --title "transgo $version" \
+            --notes-file "$notes" \
+            --verify-tag \
+            "${extra[@]}"
