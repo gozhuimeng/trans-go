@@ -115,14 +115,17 @@ jobs:
           version="${{ steps.meta.outputs.version }}"
           archive="${{ steps.meta.outputs.archive }}"
 
-          # 正文 = RELEASE_NOTES.md + 自动拼的文档链接。
+          # 正文 = RELEASE_NOTES.md 去掉顶部的维护说明注释 + 自动拼的文档链接。
+          #
+          # 注释要剥掉：它写给维护者看，不该跟着发布进 Release 正文（渲染时是隐形的，
+          # 但 Edit 视图和 API 里就是脏数据）。
           #
           # 链接在这里拼、不写进 RELEASE_NOTES.md，是因为相对链接在 Release 页面
           # 的解析基准是默认分支而不是当前 tag，文档一挪就会指错。workflow 天然知道
           # 仓库地址和 tag，拼出来的绝对链接在 fork 和仓库搬家后也照样成立。
           repo="https://github.com/${{ github.repository }}"
           notes=/tmp/release-notes.md
-          cp RELEASE_NOTES.md "$notes"
+          sed '/^<!--$/,/^-->$/d' RELEASE_NOTES.md > "$notes"
           {
             echo
             echo "## 文档"
