@@ -274,3 +274,5 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 ## License
 
 MIT
+
+本项目由 mimo v2.6 完成开发
