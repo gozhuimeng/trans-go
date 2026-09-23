@@ -16,7 +16,8 @@ transgo 只接提供商官方接口。本文档告诉你每个引擎的 Key 去�
 | `tencent` | 500 万字符/月 | 后付费默认关闭，用完停服 | 2026-10-01 起停发免费资源包，2027-10-01 全部接口不可用 |
 | `volcano` | 每月前 200 万字符 | 49 元/百万字符，自动扣费，下月初结算 | 实名认证 |
 | `aliyun` | 100 万字符/月 | 50 元/百万字符，自动转后付费且无法关闭 | 实名认证 |
-| `baidu` | 标准版 5 万/月；个人认证后高级版 100 万/月 | 49 元/百万字符，每小时查余额，不足即欠费停用 | 高级版要实名认证 |
+| `baidu` | 标准版 5 万/月；个人认证后高级版 100 万/月 | 49 元/百万字符，次日结算，余额不足即停服 | 高级版要实名认证 |
+| `baidu-llm` | 实名认证后一次性 100 万字符测试额度 | 49 元/百万字符，次日结算，余额不足即停服 | 要实名认证；大模型文本翻译服务单独开通 |
 | `azure` | 200 万字符/月 | 见 Azure 文档 | 要 Azure 订阅 |
 | `google` | 50 万字符/月 | 见 Google 文档 | 要绑 billing，且国内要代理 |
 | `youdao` | 一次性 50 元体验金 | 余额制，扣完即停 | 无 |
@@ -179,36 +180,71 @@ $ transgo config set aliyun.access_key_secret 你的AccessKeySecret
 
 ## 百度翻译
 
-**免费额度**：
+百度翻译开放平台有两个文本翻译接口，transgo 各接了一个，共用同一套 APP ID + 密钥：
 
-| 版本 | 免费额度 | 要求 | QPS |
+| transgo 引擎 | 接口 | 翻译模型 | 免费额度 |
 |---|---|---|---|
-| 标准版 | 5 万字符/月 | 无 | 1 |
-| **高级版** | **100 万字符/月** | **个人实名认证** | 10 |
-| 尊享版 | 200 万字符/月 | 企业认证 | 100 |
+| `baidu` | 通用翻译 API | 机器翻译 | 标准版 5 万/月，个人认证高级版 100 万/月，企业尊享版 200 万/月 |
+| `baidu-llm` | 大模型文本翻译 API | 大模型翻译 | 实名认证后一次性 100 万字符测试额度，不按月重置 |
 
-高级版要实名认证。标准版 5 万字符/月，高级版 100 万字符/月。
+两个接口的额度分开统计：控制台「我的服务」页「剩余免费额度」旁的
+「大模型翻译 / 机器翻译」切换标签，就是分别显示这两份剩余量。
+超出免费额度后都是 49 元/百万字符，从账户余额扣；用量每 5 分钟更新，
+费用次日结算前一天的用量，余额不足时报 `54004` 停服。账户是预付费余额制，没有自动充值。
+计费按源语言字符数，汉字、字母、空格、标点、HTML 标签各算 1 个字符，调用失败不计费。
 
-**申请步骤**
+### 通用翻译 API（`baidu` 引擎）
 
-1. 打开 <https://fanyi-api.baidu.com/api/trans/product/desktop>，用百度账号登录
-2. 注册成为开发者，完成个人实名认证（想用标准版可跳过，但额度少 20 倍）
-3. 开通「通用翻译 API」，在控制台确认是高级版
-4. 拿到 APP ID 和密钥
+| 版本 | 免费额度（按月重置） | 要求 | QPS | 单次上限 | 语种 |
+|---|---|---|---|---|---|
+| 标准版 | 5 万字符/月 | 无 | 1 | 1000 字符 | 常见语种 28 种 |
+| 高级版 | 100 万字符/月 | 个人实名认证 | 10 | 6000 字符 | 常见语种 28 种 |
+| 尊享版 | 200 万字符/月 | 企业认证 | 100 | 6000 字符 | 全部语种 200+ |
 
-**配置**
+### 大模型文本翻译 API（`baidu-llm` 引擎）
+
+独立接口 `ait/api/aiTextTranslate`，`model_type` 固定取 `llm`。同一个接口也能取 `nmt`
+调机器翻译模型，但 transgo 的机器翻译走的是上面的通用翻译 API，不经这个接口。
+QPS 10，单次上限 6000 字符，官方建议单次 2000 字符以内。
+翻译指令（`reference` 参数，如「采用意译」）和术语库干预免费开放，
+transgo 暂未暴露这两个参数。
+
+鉴权两种任选：
+
+- API Key：HTTP 头 `Authorization: Bearer <API Key>`，在控制台「API Key 管理」创建，
+  配到 `baidu.api_key` 后 `baidu-llm` 就走这种
+- MD5 签名：与通用翻译相同的 `appid + q + salt + 密钥` 拼接取 MD5，
+  `baidu.api_key` 留空时的默认行为
+
+**申请步骤**（两个接口通用）
+
+1. 打开 <https://fanyi-api.baidu.com/>，用百度账号登录
+2. 在「开发者信息」页拿到 APP ID 和密钥，完成个人实名认证
+   （不认证只能用标准版，额度少 20 倍；大模型翻译的测试额度也要认证后才发）
+3. 开通服务：<https://fanyi-api.baidu.com/choose>，通用文本翻译和大模型文本翻译分别开通
+4. 在「总览 - 我的服务」确认服务类型，标准版/高级版/尊享版可自主切换
+
+**配置**（一套凭据喂两个引擎）
 
 ```console
 $ transgo config set baidu.app_id 你的APPID
 $ transgo config set baidu.secret 你的密钥
+$ transgo config set baidu.api_key 你的APIKey    # 可选，baidu-llm 走 Bearer 免签名
 ```
+
+**余额提醒**（默认关闭）：控制台「财务总览」页，「账户余额」右侧「余额提醒 - 设置」。
+可改提醒起始余额（默认 50 元），短信、邮件各最多 3 个。提醒的是账户余额，
+不是免费额度用量，控制台没有免费额度用量提醒。
 
 **坑**
 
 - 报 `90107` = 实名认证未通过或未生效
-- 报 `54001` = 签名错误，99% 是 APP ID 或密钥抄错了
-- 报 `54004` = 余额不足。超出免费额度会按 49 元/百万字符计费，「我的服务 - 通用翻译」可开启用量提醒
+- 报 `54001` = 签名或 token 错误，多半是 APP ID、密钥或 API Key 抄错了
+- 报 `54004` = 账户余额不足，免费额度用完且余额为 0
+- 报 `52003` = 服务没开通。两个接口要在控制台分别开通，只开一个只会有一个引擎能用
 - 标准版/高级版只有 28 个常见语种，小语种要企业尊享版，`transgo lang -e baidu` 可看具体范围
+
+完整报错对照见 [troubleshooting.md](troubleshooting.md)。
 
 ---
 
@@ -358,7 +394,7 @@ $ transgo config set youdao.app_secret 你的应用密钥
 | 腾讯云 | `tencent.secret_id` / `tencent.secret_key` | `TRANSGO_TENCENT_SECRET_ID` / `_SECRET_KEY` |
 | 火山 | `volcano.access_key_id` / `volcano.secret_access_key` | `TRANSGO_VOLCANO_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` |
 | 阿里云 | `aliyun.access_key_id` / `aliyun.access_key_secret` | `TRANSGO_ALIYUN_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` |
-| 百度 | `baidu.app_id` / `baidu.secret` | `TRANSGO_BAIDU_APP_ID` / `TRANSGO_BAIDU_SECRET` |
+| 百度（两个接口共用） | `baidu.app_id` / `baidu.secret` / `baidu.api_key` | `TRANSGO_BAIDU_APP_ID` / `_SECRET` / `_API_KEY` |
 | Azure | `azure.api_key` / `azure.region` | `TRANSGO_AZURE_API_KEY` / `TRANSGO_AZURE_REGION` |
 | Google | `google.api_key` | `TRANSGO_GOOGLE_API_KEY` |
 | 有道 | `youdao.app_key` / `youdao.app_secret` | `TRANSGO_YOUDAO_APP_KEY` / `_APP_SECRET` |

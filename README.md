@@ -20,7 +20,7 @@ $ transgo -t ja "你好"
 ## 特性
 
 - stdout 只有译文本身，元信息一律走 stderr，可以直接进管道，也能直接喂给 `wl-copy`
-- 10 个官方翻译接口，免费额度从 5 万到 500 万字符/月不等，挑顺手的填 Key 就行
+- 11 个官方翻译接口，免费额度从 5 万到 500 万字符/月不等，挑顺手的填 Key 就行
 - 语种方向自动决策，出问题时可以手动覆盖
 - 单二进制，运行期零外部依赖，不调 `curl`、不调 `wl-paste`，拷过去就能跑
 - 不监听全局按键、不跑守护进程，快捷键由桌面环境直接调起
@@ -165,6 +165,7 @@ $ transgo -f en -t zh "hello"             # 同时指定源语
 | `azure` | 200 万字符/月 | 订阅 + Key（需绑卡） |
 | `aliyun` | 100 万字符/月 | AccessKey |
 | `baidu` | 标准版 5 万/月<br>实名认证后高级版 100 万/月 | APP ID + 密钥 |
+| `baidu-llm` | 实名认证后一次性 100 万字符测试额度 | APP ID + 密钥 |
 | `google` | 50 万字符/月，永久 | GCP 项目 + Key（需绑卡开 billing） |
 | `llm` | 取决于服务商 | 任意 OpenAI 兼容接口 |
 | `mymemory` | 5 千字符/天（留邮箱 5 万） | 免注册 |
@@ -253,7 +254,7 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 
 ## 路线图
 
-- [x] **M1** CLI 主体 + 10 个官方翻译引擎 + 配置管理
+- [x] **M1** CLI 主体 + 11 个官方翻译引擎 + 配置管理
 - [ ] **M2** GUI（`transgo gui` / `transgo gui --clip`）
       独立输入翻译窗口，封装 CLI 的核心库；不监听剪贴板、不监听全局按键
 - [ ] 划词翻译（模拟 Ctrl+C + 读剪贴板，需装 `wtype`）
@@ -266,7 +267,7 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 
 | 文档 | 读者 | 内容 |
 |---|---|---|
-| [docs/engines.md](docs/engines.md) | 使用者 | 10 个引擎怎么申请 Key、怎么配、有什么坑 |
+| [docs/engines.md](docs/engines.md) | 使用者 | 11 个引擎怎么申请 Key、怎么配、有什么坑 |
 | [docs/hyprland.md](docs/hyprland.md) | 使用者 | 桌面集成、快捷键绑定、实用脚本 |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | 使用者 | 报错对照、自查步骤 |
 | [docs/architecture.md](docs/architecture.md) | 开发者 | 目录结构、引擎抽象、踩过的坑、怎么加新引擎 |

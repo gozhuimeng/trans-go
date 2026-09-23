@@ -24,7 +24,8 @@ crates/
 │           ├── tencent.rs      腾讯云 TMT（TC3-HMAC-SHA256）
 │           ├── volcano.rs      火山引擎（Volcengine V4 签名）
 │           ├── aliyun.rs       阿里云（POP-RPC HMAC-SHA1）
-│           ├── baidu.rs        百度（MD5 签名）
+│           ├── baidu.rs        百度通用翻译（MD5 签名）
+│           ├── baidu_llm.rs    百度大模型文本翻译（Bearer API Key 或 MD5 签名）
 │           ├── azure.rs        Azure AI Translator
 │           ├── google.rs       Google Cloud Translation v2
 │           ├── youdao.rs       有道智云（SHA-256 hex 签名）
@@ -86,8 +87,8 @@ pub trait Engine: Send + Sync {
 
 ```rust
 pub const ORDER: &[&str] = &[
-    "deepl", "tencent", "volcano", "aliyun", "baidu",
-    "azure", "google", "youdao", "llm", "mymemory",
+    "deepl", "tencent", "volcano", "aliyun", "baidu", "baidu-llm", "azure", "google", "youdao",
+    "llm", "mymemory",
 ];
 ```
 
@@ -203,6 +204,13 @@ CLI 工具必须在 `main` 开头恢复 `SIG_DFL`。Unix 管道的语义就是�
 
 因为无法离线实测，实现里首次遇到签名错误会自动换一种形式重试一次，并用 `AtomicU8` 记住结论，
 后续调用直接走正确形式。**如果你有火山的 Key 验证过，可以把这个探测逻辑删掉。**
+
+### 百度大模型文本翻译的 `salt`
+
+官方文档说 `salt` 是「可为字母或数字的字符串」，那是通用翻译 API 的规矩。
+大模型文本翻译的 JSON 体里 `salt` 实际必须是 int64 数字：传字符串报 `53001`
+（parse json body error: readUint64），超过 int64 上限也报 `53001`（ReadInt64: overflow）。
+签名拼接时用它的十进制形式，与通用翻译一致。`baidu_llm.rs` 里取 UUID 低 63 位即为此故。
 
 ### 各家的错误码类型不稳定
 

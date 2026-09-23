@@ -3,6 +3,7 @@
 mod aliyun;
 mod azure;
 mod baidu;
+mod baidu_llm;
 mod deepl;
 mod google;
 mod mymemory;
@@ -25,7 +26,8 @@ use crate::types::{Request, Translation};
 ///
 /// 排序依据是「国内可直连 + 免费额度」。`mymemory` 免注册，排在末尾。
 pub const ORDER: &[&str] = &[
-    "deepl", "tencent", "volcano", "aliyun", "baidu", "azure", "google", "youdao", "llm", "mymemory",
+    "deepl", "tencent", "volcano", "aliyun", "baidu", "baidu-llm", "azure", "google", "youdao",
+    "llm", "mymemory",
 ];
 
 /// 一个翻译后端。
@@ -69,6 +71,7 @@ pub fn build_all(cfg: &Config) -> Vec<Arc<dyn Engine>> {
                 "volcano" => Arc::new(volcano::Volcano::new(client.clone(), &cfg.volcano)),
                 "aliyun" => Arc::new(aliyun::Aliyun::new(client.clone(), &cfg.aliyun)),
                 "baidu" => Arc::new(baidu::Baidu::new(client.clone(), &cfg.baidu)),
+                "baidu-llm" => Arc::new(baidu_llm::BaiduLlm::new(client.clone(), &cfg.baidu)),
                 "azure" => Arc::new(azure::Azure::new(client.clone(), &cfg.azure)),
                 "google" => Arc::new(google::Google::new(client.clone(), &cfg.google)),
                 "youdao" => Arc::new(youdao::Youdao::new(client.clone(), &cfg.youdao)),

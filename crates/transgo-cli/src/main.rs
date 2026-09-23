@@ -480,11 +480,16 @@ secret_access_key = ""
 access_key_id = ""
 access_key_secret = ""
 
-# ---- 百度翻译：标准版 5 万/月，实名认证后高级版 100 万/月。超出每小时查余额，不足即停 ----
-# https://fanyi-api.baidu.com/api/trans/product/desktop
+# ---- 百度翻译：两个接口共用一套 APP ID + 密钥 ----
+# baidu 走通用翻译 API（机器翻译）：标准版 5 万字符/月，实名认证后高级版 100 万字符/月
+# baidu-llm 走大模型文本翻译 API：实名认证后一次性 100 万字符测试额度，不按月重置
+# 超出后都是 49 元/百万字符，次日结算，余额不足即停，不会自动充值
+# https://fanyi-api.baidu.com/
 [baidu]
 app_id = ""
 secret = ""
+# 可选：API Key 鉴权（控制台「API Key 管理」创建）。baidu-llm 填了就走 Bearer 免签名
+# api_key = ""
 
 # ---- Azure AI Translator：200 万字符/月（需绑卡）----
 # https://azure.microsoft.com/zh-cn/products/ai-services/ai-translator

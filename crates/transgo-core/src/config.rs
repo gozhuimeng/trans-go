@@ -78,6 +78,9 @@ pub struct TencentCfg {
 pub struct BaiduCfg {
     pub app_id: Option<String>,
     pub secret: Option<String>,
+    /// API Key 鉴权（Bearer），控制台「API Key 管理」创建。
+    /// 填了它 `baidu-llm` 就免 MD5 签名；`baidu` 通用翻译仍走签名
+    pub api_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -195,6 +198,7 @@ impl Config {
         overlay!(self.tencent.region, "TRANSGO_TENCENT_REGION");
         overlay!(self.baidu.app_id, "TRANSGO_BAIDU_APP_ID");
         overlay!(self.baidu.secret, "TRANSGO_BAIDU_SECRET");
+        overlay!(self.baidu.api_key, "TRANSGO_BAIDU_API_KEY");
         overlay!(self.aliyun.access_key_id, "TRANSGO_ALIYUN_ACCESS_KEY_ID");
         overlay!(self.aliyun.access_key_secret, "TRANSGO_ALIYUN_ACCESS_KEY_SECRET");
         overlay!(self.volcano.access_key_id, "TRANSGO_VOLCANO_ACCESS_KEY_ID");
