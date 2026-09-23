@@ -89,7 +89,7 @@ $ transgo translate --help
 Usage: transgo translate [OPTIONS] [TEXT]...
 
 Arguments:
-  [TEXT]...  要翻译的文本，不传或传 - 则从 stdin 读取
+  [TEXT]...  要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
 
 Options:
   -t, --to <LANG>     目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文

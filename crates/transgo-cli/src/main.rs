@@ -119,8 +119,8 @@ enum Cmd {
     Lang(LangArgs),
 }#[derive(Args)]
 struct TranslateArgs {
-    /// 要翻译的文本，不传或传 - 则从 stdin 读取
-    #[arg(value_name = "TEXT", trailing_var_arg = true, allow_hyphen_values = true)]
+    /// 要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
+    #[arg(value_name = "TEXT")]
     text: Vec<String>,
 
     /// 目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文
@@ -593,5 +593,28 @@ mod tests {
         assert_eq!(dwidth("abc"), 3);
         assert_eq!(dwidth("中文"), 4);
         assert_eq!(pad("中", 4), "中  ");
+    }
+
+    #[test]
+    fn flags_after_text_are_options_not_text() {
+        let cli = Cli::try_parse_from(["transgo", "translate", "hello", "world", "-v"]).unwrap();
+        let Cmd::Translate(a) = cli.cmd else { panic!("应解析成 translate") };
+        assert_eq!(a.text, vec!["hello".to_string(), "world".to_string()]);
+        assert!(a.verbose);
+    }
+
+    #[test]
+    fn hyphen_text_goes_after_double_dash() {
+        let cli = Cli::try_parse_from(["transgo", "translate", "--", "-v", "-5"]).unwrap();
+        let Cmd::Translate(a) = cli.cmd else { panic!("应解析成 translate") };
+        assert_eq!(a.text, vec!["-v".to_string(), "-5".to_string()]);
+        assert!(!a.verbose);
+    }
+
+    #[test]
+    fn bare_dash_stays_stdin_marker() {
+        let cli = Cli::try_parse_from(["transgo", "translate", "-"]).unwrap();
+        let Cmd::Translate(a) = cli.cmd else { panic!("应解析成 translate") };
+        assert_eq!(a.text, vec!["-".to_string()]);
     }
 }

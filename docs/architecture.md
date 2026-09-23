@@ -231,6 +231,11 @@ clap 无法在一个命令里同时容纳「贪婪的位置参数」（`[TEXT]..
 `main.rs::normalize_argv()` 在解析前做一次纯字符串预扫描，把默认子命令 `translate` 补上，
 让 `transgo "hello"` 与 `transgo translate "hello"` 等价。判定是确定性的，不依赖 clap 的启发式。
 
+文本参数不设 `trailing_var_arg` / `allow_hyphen_values`：设了会让第一个位置参数之后的
+`-v` 这类选项被吞成待翻译文本（`transgo "hello" -v` 曾译出 `你好-v`）。代价是以 `-` 开头的
+文本要放到 `--` 之后（`transgo -- -v`），裸 `-` 仍是 stdin 标记。多词文本不用引号，
+分开传会按空格拼回。
+
 ---
 
 ## 测试
