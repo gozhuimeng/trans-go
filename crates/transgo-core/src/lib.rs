@@ -4,7 +4,7 @@
 //! - [`lang`]：统一语种枚举 + 各家引擎语种代码映射
 //! - [`detect`]：零依赖的轻量语种探测（服务于「中英互译」的目标语自动决策）
 //! - [`config`]：`~/.config/transgo/config.toml` 的读写
-//! - [`engine`]：[`engine::Engine`] trait 与 10 个官方翻译接口的实现
+//! - [`engine`]：[`engine::Engine`] trait 与 11 个官方翻译接口的实现
 
 pub mod config;
 pub mod detect;
