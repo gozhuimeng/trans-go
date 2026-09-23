@@ -442,7 +442,7 @@ fn cmd_config(action: ConfigCmd) -> Result<(), Error> {
 }
 
 const TEMPLATE: &str = r#"# transgo 配置文件
-# 改单项建议用 transgo config set <key> <value>，比手改文件稳。所有键都能用环境变量
+# 改单项可用 transgo config set <key> <value>，比手改文件稳。所有键都能用环境变量
 # TRANSGO_* 覆盖，例如 TRANSGO_DEEPL_API_KEY，环境变量优先于本文件。
 
 [default]
@@ -455,32 +455,32 @@ from = "auto"
 # 请求超时（秒）
 timeout_secs = 15
 
-# ---- DeepL：质量最好，但国内开不了（要境外信用卡）。免费 50 万字符/月 ----
+# ---- DeepL：免费 50 万字符/月。开通要境外发行的信用卡，国内的不认 ----
 # https://www.deepl.com/pro-api 注册即可拿 Key，免费 Key 以 :fx 结尾
 [deepl]
 api_key = ""
 
-# ---- 腾讯云机器翻译：500 万字符/月，但已公告退市，别再新接 ----
+# ---- 腾讯云机器翻译：500 万字符/月。2027-10-01 起全部接口不可用 ----
 # https://cloud.tencent.com/document/product/551/40566
 [tencent]
 secret_id = ""
 secret_key = ""
 # region = "ap-guangzhou"
 
-# ---- 火山引擎机器翻译：每月前 200 万字符免费，超出自动扣费，建议设额度预警 ----
+# ---- 火山引擎机器翻译：每月前 200 万字符免费，超出 49 元/百万字符自动扣费 ----
 # https://console.volcengine.com/ai/region:ai+cn-north-1/translate
 [volcano]
 access_key_id = ""
 secret_access_key = ""
 # region = "cn-north-1"
 
-# ---- 阿里云机器翻译（通用版）：100 万字符/月 ----
+# ---- 阿里云机器翻译（通用版）：100 万字符/月。超出自动转后付费且无法关闭 ----
 # https://help.aliyun.com/zh/machine-translation/
 [aliyun]
 access_key_id = ""
 access_key_secret = ""
 
-# ---- 百度翻译：实名认证后高级版 100 万字符/月 ----
+# ---- 百度翻译：标准版 5 万/月，实名认证后高级版 100 万/月。超出每小时查余额，不足即停 ----
 # https://fanyi-api.baidu.com/api/trans/product/desktop
 [baidu]
 app_id = ""
@@ -498,7 +498,7 @@ api_key = ""
 [google]
 api_key = ""
 
-# ---- 有道智云：无月度额度，仅一次性体验金，做退路 ----
+# ---- 有道智云：无月度额度，一次性 50 元体验金。余额制，扣完即停 ----
 # https://ai.youdao.com/
 [youdao]
 app_key = ""
@@ -512,7 +512,7 @@ model = "gpt-4o-mini"
 # temperature = 0.2
 # system_prompt = ""   # 覆盖默认翻译提示词，可用来固定术语表或语气
 
-# ---- MyMemory：免注册兜底，留邮箱可把额度提到 5 万字符/天 ----
+# ---- MyMemory：免注册，留邮箱可把额度提到 5 万字符/天 ----
 [mymemory]
 email = ""
 "#;

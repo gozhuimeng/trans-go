@@ -1,4 +1,4 @@
-//! DeepL API · 质量最好的官方接口，免费版每月 50 万字符。
+//! DeepL API · 官方接口，免费版每月 50 万字符。
 //!
 //! 接口文档 <https://developers.deepl.com/docs/api-reference/translate>
 //! 免费额度 <https://support.deepl.com/hc/zh-cn/articles/360020685720>

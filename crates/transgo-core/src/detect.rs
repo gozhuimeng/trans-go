@@ -91,7 +91,7 @@ pub fn auto_target(text: &str) -> Lang {
 
 /// 粗略的语种标注，**只用于展示**。
 ///
-/// 远端引擎有的不回传检测到的源语种（比如 Azure），这时用它兜底给 `-v` / `--json`
+/// 远端引擎有的不回传检测到的源语种（比如 Azure），这时用它补给 `-v` / `--json`
 /// 里的 `from` 字段填个大概值。它不影响译文方向，方向只看 [`is_chinese`]。
 pub fn detect(text: &str) -> Lang {
     for ch in text.chars() {

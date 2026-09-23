@@ -1,7 +1,7 @@
 //! 有道智云 · 文本翻译。
 //!
 //! 接口文档 <https://ai.youdao.com/DOCSIRMA/html/trans/api/wbfy/index.html>
-//! 免费额度最弱：新账号只有一次性 50 元体验金，没有月度免费额度。加它是为了多一条退路。
+//! 免费额度：新账号只有一次性 50 元体验金，没有月度免费额度。余额制，余额扣完即停。
 //!
 //! 签名 `SHA256(appKey + truncate(q) + salt + curtime + appSecret)`，输出**小写十六进制**（不是 Base64）。
 //! `salt + curtime` 一对一用，重放会报 207。

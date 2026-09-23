@@ -19,7 +19,7 @@ crates/
 │       └── engine/
 │           ├── mod.rs      Engine trait、注册表、默认引擎选择
 │           ├── util.rs     报文抓取、错误解析、HTML 反转义等
-│           ├── mymemory.rs     免注册兜底
+│           ├── mymemory.rs     免注册
 │           ├── deepl.rs        DeepL（免费 50 万/月）
 │           ├── tencent.rs      腾讯云 TMT（TC3-HMAC-SHA256）
 │           ├── volcano.rs      火山引擎（Volcengine V4 签名）
@@ -91,7 +91,7 @@ pub const ORDER: &[&str] = &[
 ];
 ```
 
-`mymemory` 垫底做兜底，它免注册，保证没配任何 Key 时也能用。
+`mymemory` 排在末尾，它免注册，保证没配任何 Key 时也能用。
 
 ---
 
@@ -133,7 +133,7 @@ pub const ORDER: &[&str] = &[
   把判定往阈值上拉，让结果不稳定
 - 假名/谚文出现即判非中文。它们是日韩文专属字符，这样日译中、韩译中才会走「译成中文」分支
 
-`detect::detect()` 是另一回事：它只用于**展示**（Azure 不回传检测到的源语种时给 `-v` / `--json` 的 `from` 字段兜底），
+`detect::detect()` 是另一回事：它只用于**展示**（Azure 不回传检测到的源语种时给 `-v` / `--json` 的 `from` 字段补齐），
 不影响译文方向。
 
 ### 已知局限

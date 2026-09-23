@@ -1,4 +1,4 @@
-//! MyMemory · 免注册的翻译记忆库接口，做零配置兜底。
+//! MyMemory · 免注册的翻译记忆库接口。
 //!
 //! 接口文档 <https://mymemory.translated.net/doc/spec.php>
 //! 免费额度：匿名 5 千字符/天，留邮箱后 5 万字符/天。

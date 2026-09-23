@@ -46,7 +46,7 @@ $ cargo install --path crates/transgo-cli
 
 ## 快速开始
 
-不填任何 Key 就能用（走免注册的 MyMemory 兜底）：
+不填任何 Key 就能用（走免注册的 MyMemory）：
 
 ```console
 $ transgo "今天天气不错"
@@ -61,7 +61,7 @@ $ transgo "今天天气不错"
 It's a nice day today
 ```
 
-各家怎么申请 Key 见 [docs/engines.md](docs/engines.md)（推荐 DeepL + 腾讯云，两个够日常用）。
+各家的申请步骤、免费额度、超额计费方式和开通门槛见 [docs/engines.md](docs/engines.md)。
 
 ---
 
@@ -170,8 +170,8 @@ $ transgo -f en -t zh "hello"             # 同时指定源语
 | `mymemory` | 5 千字符/天（留邮箱 5 万） | 免注册 |
 | `youdao` | 无月度额度，仅一次性体验金 | AppKey + AppSecret |
 
-怎么选？`deepl`（质量最好）+ `tencent`（额度最慷慨）两个就够日常用了。
-`mymemory` 免注册，做没配 Key 时的兜底。
+各家的额度和超额行为见 [docs/engines.md](docs/engines.md)。
+`mymemory` 免注册，排在优先级末尾。
 
 > `mymemory` 质量有限。它是众包翻译记忆库，译文取自其他用户提交的条目，抽到哪条看运气。
 > 典型症状是把术语表条目当译文原样返回（`hello world` → `hello world`），这是数据问题，换路由解决不了。

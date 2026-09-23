@@ -23,7 +23,7 @@ use crate::types::{Request, Translation};
 
 /// 引擎优先级：越靠前越优先被选为默认引擎。
 ///
-/// 排序依据是「国内可直连 + 免费额度 + 翻译质量」，`mymemory` 免注册但质量一般，垫底做兜底。
+/// 排序依据是「国内可直连 + 免费额度」。`mymemory` 免注册，排在末尾。
 pub const ORDER: &[&str] = &[
     "deepl", "tencent", "volcano", "aliyun", "baidu", "azure", "google", "youdao", "llm", "mymemory",
 ];
