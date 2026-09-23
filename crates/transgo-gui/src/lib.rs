@@ -461,7 +461,7 @@ fn install_fonts(ctx: &egui::Context) {
         let mut fonts = egui::FontDefinitions::default();
         fonts
             .font_data
-            .insert("cjk".to_string(), egui::FontData::from_owned(bytes).into());
+            .insert("cjk".to_string(), egui::FontData::from_owned(bytes));
         // 放在默认字体后面：拉丁字符用 egui 自带的，汉字落到这款
         for list in fonts.families.values_mut() {
             list.push("cjk".to_string());
