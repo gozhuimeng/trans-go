@@ -3,6 +3,8 @@
 //! 接口文档 <https://cloud.google.com/translate/docs/reference/translate-text-v2>
 //! 免费额度：每月前 50 万字符免费，按月重置、不过期。
 //!
+//! Google Cloud 在国内需要代理才能访问，申请也要求绑卡开 billing。
+//!
 //! 用的是**官方** `translation.googleapis.com` + API Key，不是网页版逆向接口。
 
 use async_trait::async_trait;
@@ -50,7 +52,7 @@ impl Engine for Google {
         "Google Cloud Translation"
     }
     fn quota(&self) -> &'static str {
-        "50万字符/月"
+        "50万字符/月（国内要代理）"
     }
     fn signup(&self) -> &'static str {
         "https://cloud.google.com/translate/docs/setup"

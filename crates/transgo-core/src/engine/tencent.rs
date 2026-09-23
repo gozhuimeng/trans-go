@@ -3,6 +3,9 @@
 //! 接口文档 <https://cloud.tencent.com/document/api/551/15615>
 //! 免费额度：**每月 500 万字符**，国内几家里额度最大方。
 //!
+//! **注意**：腾讯云已公告退市，2027-10-01 起所有接口不可用；免费资源包
+//! 2026-10-01 起停止发放（资源包仅当月有效，实际免费额度到 2026-09-30 止）。
+//!
 //! 鉴权是腾讯云 TC3-HMAC-SHA256，规范请求里的头部名要小写并按字典序排好。
 
 use async_trait::async_trait;
@@ -97,7 +100,7 @@ impl Engine for Tencent {
         "腾讯云机器翻译"
     }
     fn quota(&self) -> &'static str {
-        "500万字符/月"
+        "500万字符/月（2026-09-30 止）"
     }
     fn signup(&self) -> &'static str {
         "https://cloud.tencent.com/document/product/551/40566"

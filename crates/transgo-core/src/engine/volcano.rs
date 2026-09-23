@@ -1,7 +1,10 @@
 //! 火山引擎机器翻译 · `TranslateText`。
 //!
 //! 接口文档 <https://docs.volcengine.com/docs/MachineTranslation/TextTranslationAPI?lang=zh>
-//! 免费额度：**每月 200 万字符**。
+//! 免费额度：**每月前 200 万字符免费**，超出 49 元/百万字符。
+//!
+//! 注意开通即默认「日结按量后付费」，超出免费额度会自动扣费、不会停服，
+//! 账单下月初才结算。建议在费用中心设可用额度预警。
 //!
 //! 鉴权是火山引擎 V4 签名（HMAC-SHA256），不是有些第三方客户端用的 `X-Top-*` 那套。
 //! 源语种要**省略字段**来表示自动检测，不能传 `"auto"`。
@@ -171,7 +174,7 @@ impl Engine for Volcano {
         "火山引擎机器翻译"
     }
     fn quota(&self) -> &'static str {
-        "200万字符/月"
+        "每月前200万字符免费，超出49元/百万字符（会自动扣费）"
     }
     fn signup(&self) -> &'static str {
         "https://docs.volcengine.com/docs/MachineTranslation/Productbilling?lang=zh"

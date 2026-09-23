@@ -455,19 +455,19 @@ from = "auto"
 # 请求超时（秒）
 timeout_secs = 15
 
-# ---- DeepL：质量最好，免费 50 万字符/月 ----
+# ---- DeepL：质量最好，但国内开不了（要境外信用卡）。免费 50 万字符/月 ----
 # https://www.deepl.com/pro-api 注册即可拿 Key，免费 Key 以 :fx 结尾
 [deepl]
 api_key = ""
 
-# ---- 腾讯云机器翻译：额度最大方，500 万字符/月 ----
+# ---- 腾讯云机器翻译：500 万字符/月，但已公告退市，别再新接 ----
 # https://cloud.tencent.com/document/product/551/40566
 [tencent]
 secret_id = ""
 secret_key = ""
 # region = "ap-guangzhou"
 
-# ---- 火山引擎机器翻译：200 万字符/月 ----
+# ---- 火山引擎机器翻译：每月前 200 万字符免费，超出自动扣费，建议设额度预警 ----
 # https://console.volcengine.com/ai/region:ai+cn-north-1/translate
 [volcano]
 access_key_id = ""
@@ -493,7 +493,7 @@ api_key = ""
 # 多服务资源或区域资源必须填
 # region = "eastasia"
 
-# ---- Google Cloud Translation：50 万字符/月（需绑卡开 billing）----
+# ---- Google Cloud Translation：50 万字符/月（国内要代理，且需绑卡开 billing）----
 # https://cloud.google.com/translate/docs/setup
 [google]
 api_key = ""

@@ -119,7 +119,7 @@ impl Engine for DeepL {
         "DeepL"
     }
     fn quota(&self) -> &'static str {
-        "50万字符/月"
+        "50万字符/月（国内开不了）"
     }
     fn signup(&self) -> &'static str {
         "https://www.deepl.com/pro-api"
