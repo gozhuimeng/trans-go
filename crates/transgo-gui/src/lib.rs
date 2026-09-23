@@ -34,6 +34,7 @@ pub fn run(clip: bool) -> Result<(), String> {
         options,
         Box::new(move |cc| {
             install_fonts(&cc.egui_ctx);
+            setup_style(&cc.egui_ctx);
             Box::new(App::new(engines, preset))
         }),
     )
@@ -232,7 +233,14 @@ impl eframe::App for App {
             }
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default()
+            .frame(egui::Frame {
+                // 必须显式给不透明的填充：Frame::default() 是透明的，会透出桌面壁纸
+                fill: egui::Color32::WHITE,
+                inner_margin: egui::Margin::same(14.0),
+                ..egui::Frame::default()
+            })
+            .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 egui::ComboBox::from_id_source("engine")
                     .selected_text(
@@ -253,10 +261,9 @@ impl eframe::App for App {
                 lang_combo(ui, "到", &mut self.to, false);
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui
-                        .add_enabled(!self.busy, egui::Button::new("翻译"))
-                        .clicked()
-                    {
+                    let btn = egui::Button::new(egui::RichText::new("翻译").color(egui::Color32::WHITE))
+                        .fill(ACCENT);
+                    if ui.add_enabled(!self.busy, btn).clicked() {
                         self.start_translate();
                     }
                     if self.busy {
@@ -265,11 +272,25 @@ impl eframe::App for App {
                 });
             });
 
+            ui.add_space(6.0);
             ui.separator();
+            ui.add_space(4.0);
+
+            // 字符数给个直观读数：两家百度接口都按源字符计费
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("原文").strong());
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.label(
+                        egui::RichText::new(format!("{} 字符", self.source.chars().count()))
+                            .color(META),
+                    );
+                });
+            });
 
             ui.add(
                 egui::TextEdit::multiline(&mut self.source)
                     .desired_rows(8)
+                    .desired_width(f32::INFINITY)
                     .hint_text("输入要翻译的文本，回车翻译，Shift + 回车换行"),
             );
 
@@ -278,31 +299,37 @@ impl eframe::App for App {
             }
 
             ui.horizontal(|ui| {
-                if ui.button("复制译文").clicked() {
-                    self.copy_output();
-                }
-                if let Some(at) = self.copied_at {
-                    if at.elapsed() < Duration::from_secs(2) {
-                        ui.label(egui::RichText::new("已复制").weak());
-                        ctx.request_repaint_after(Duration::from_millis(500));
-                    } else {
-                        self.copied_at = None;
-                    }
-                }
+                ui.label(egui::RichText::new("译文").strong());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(egui::RichText::new(&self.status).weak());
+                    ui.label(egui::RichText::new(&self.status).color(META));
                 });
             });
 
             ui.add(
                 egui::TextEdit::multiline(&mut self.output)
                     .desired_rows(8)
+                    .desired_width(f32::INFINITY)
                     .hint_text("译文会显示在这里"),
             );
 
+            ui.horizontal(|ui| {
+                if ui.button("复制译文").clicked() {
+                    self.copy_output();
+                }
+                if let Some(at) = self.copied_at {
+                    if at.elapsed() < Duration::from_secs(2) {
+                        ui.label("已复制");
+                        ctx.request_repaint_after(Duration::from_millis(500));
+                    } else {
+                        self.copied_at = None;
+                    }
+                }
+            });
+
             if let Some(err) = &self.error {
+                ui.add_space(2.0);
                 ui.colored_label(
-                    egui::Color32::from_rgb(220, 80, 80),
+                    egui::Color32::from_rgb(200, 60, 60),
                     egui::RichText::new(err).small(),
                 );
             }
@@ -333,6 +360,69 @@ fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
                 ui.selectable_value(sel, *l, l.name_zh());
             }
         });
+}
+
+// --------------------------------------------------------------------- 外观
+
+/// 点缀色：翻译主按钮
+const ACCENT: egui::Color32 = egui::Color32::from_rgb(52, 112, 214);
+/// 元信息（字符数、状态行）用的中间灰，比 weak 更清楚一点
+const META: egui::Color32 = egui::Color32::from_gray(110);
+
+/// 浅色主题 + 大字号 + 明确的控件边框。egui 默认深底灰字、字号偏小、
+/// 文本框边框几乎不可见，这里统一调掉。
+fn setup_style(ctx: &egui::Context) {
+    let mut style = (*ctx.style()).clone();
+    style.visuals = egui::Visuals::light();
+    // 纯白底，不透桌面
+    style.visuals.panel_fill = egui::Color32::WHITE;
+
+    // 下拉框、按钮统一最小高度，避免顶栏参差
+    style.spacing.interact_size.y = 36.0;
+
+    // 文本框、下拉框的默认边框太淡，加深一点，顺带统一圆角
+    let border = egui::Stroke::new(1.0_f32, egui::Color32::from_gray(150));
+    let rounding = egui::Rounding::same(4.0);
+    for w in [
+        &mut style.visuals.widgets.noninteractive,
+        &mut style.visuals.widgets.inactive,
+        &mut style.visuals.widgets.hovered,
+        &mut style.visuals.widgets.active,
+    ] {
+        w.bg_stroke = border;
+        w.rounding = rounding;
+    }
+
+    // 控件之间松一点
+    style.spacing.item_spacing = egui::vec2(10.0, 10.0);
+    style.spacing.button_padding = egui::vec2(12.0, 6.0);
+
+    // 字号整体加大一档
+    style.text_styles = [
+        (
+            egui::TextStyle::Heading,
+            egui::FontId::new(24.0, egui::FontFamily::Proportional),
+        ),
+        (
+            egui::TextStyle::Body,
+            egui::FontId::new(18.0, egui::FontFamily::Proportional),
+        ),
+        (
+            egui::TextStyle::Button,
+            egui::FontId::new(18.0, egui::FontFamily::Proportional),
+        ),
+        (
+            egui::TextStyle::Small,
+            egui::FontId::new(14.0, egui::FontFamily::Proportional),
+        ),
+        (
+            egui::TextStyle::Monospace,
+            egui::FontId::new(17.0, egui::FontFamily::Monospace),
+        ),
+    ]
+    .into();
+
+    ctx.set_style(style);
 }
 
 // ------------------------------------------------------------------ 字体与剪贴板
