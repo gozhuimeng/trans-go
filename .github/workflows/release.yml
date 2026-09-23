@@ -133,7 +133,7 @@ jobs:
             echo "完整文档在仓库里："
             echo
             echo "- [README]($repo/blob/$tag/README.md)：特性、安装、用法、配置"
-            echo "- [翻译引擎申请与配置]($repo/blob/$tag/docs/engines.md)：10 家 API Key 怎么申请，有什么坑"
+            echo "- [翻译引擎申请与配置]($repo/blob/$tag/docs/engines.md)：各家 API Key 怎么申请，有什么坑"
             echo "- [Hyprland / Wayland 桌面集成]($repo/blob/$tag/docs/hyprland.md)：快捷键绑定、实用脚本"
             echo "- [常见问题与故障排查]($repo/blob/$tag/docs/troubleshooting.md)：报错信息对照"
             echo "- [实现说明]($repo/blob/$tag/docs/architecture.md)：给改代码或加引擎的人"
