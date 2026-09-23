@@ -62,13 +62,13 @@ $ transgo config set deepl.endpoint https://你的网关/v2/translate
 
 ## 腾讯云机器翻译（额度最大方）
 
-**免费额度**：500 万字符/月，国内几家里最大方。
+**免费额度**：文本翻译每月 500 万字符，国内几家里最大方。以资源包形式发放：当月首次开通当天就发，
+之后每月 1 日发，仅当月有效。**后付费默认关闭**，资源包用完自动停服，不会转成扣费；要继续用去控制台手动开。
 
 **申请步骤**
 
-1. 打开 <https://cloud.tencent.com/document/product/551/40566>，用腾讯云账号登录
-2. 开通机器翻译（TMT）服务，没开通的话调用会报 `ResourceUnavailable.ServiceNotOpen`
-3. 去 <https://console.cloud.tencent.com/cam/capi> 创建 API 密钥，拿到 SecretId 和 SecretKey
+1. 打开 <https://console.cloud.tencent.com/tmt>，勾选服务协议后点「开通」，文本翻译等接口一键全开
+2. 去 <https://console.cloud.tencent.com/cam/capi> 创建 API 密钥，拿到 SecretId 和 SecretKey
 
 **配置**
 
@@ -83,8 +83,16 @@ $ transgo config set tencent.secret_key 你的SecretKey
 必须先开通服务，只建密钥不够。SecretKey 是敏感信息，别提交进 git。
 子账号要有 `QcloudTMTFullAccess` 之类的权限，否则报 `UnauthorizedOperation`。
 
-报 `SignatureDoesNotMatch` 多半是 SecretKey 抄错了，`AuthFailure.SignatureExpire` 则是系统
-时钟不准，`timedatectl` 校准一下。
+报错对照：
+
+| 错误码 | 含义 |
+|---|---|
+| `FailedOperation.UserNotRegistered` | 服务没开通。Key 是好的，去 <https://console.cloud.tencent.com/tmt> 点「开通」 |
+| `FailedOperation.NoFreeAmount` | 本月 500 万字符用完了，下月 1 日重置 |
+| `FailedOperation.ServiceIsolate` | 账号欠费停服 |
+| `FailedOperation.ErrorUserArea` | 账号区域和请求的 `region` 对不上 |
+| `SignatureDoesNotMatch` | SecretKey 抄错了 |
+| `AuthFailure.SignatureExpire` | 系统时钟不准，`timedatectl` 校准一下 |
 
 ---
 

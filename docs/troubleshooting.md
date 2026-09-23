@@ -115,7 +115,10 @@ transgo 的报错形如 `transgo: <引擎> 返回错误 [<错误码>]: <说明>`
 | `AuthFailure.SecretIdNotFound` | SecretId 抄错了 |
 | `AuthFailure.SignatureExpire` | 系统时钟不准，`timedatectl` 校准 |
 | `UnauthorizedOperation` | 子账号无 TMT 权限 |
-| `ResourceUnavailable.ServiceNotOpen` | **机器翻译服务没开通**，只建了密钥不够 |
+| `FailedOperation.UserNotRegistered` | **机器翻译服务没开通**，只建了密钥不够 |
+| `FailedOperation.NoFreeAmount` | 本月 500 万字符用完了 |
+| `FailedOperation.ServiceIsolate` | 账号欠费停服 |
+| `FailedOperation.ErrorUserArea` | 账号区域和请求的 `region` 对不上 |
 | `InvalidParameter` | 语种方向不支持 |
 | `LimitExceeded` | 配额耗尽或触发限频 |
 
