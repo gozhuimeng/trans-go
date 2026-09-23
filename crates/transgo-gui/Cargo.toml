@@ -1,19 +1,15 @@
 [package]
-name = "transgo-cli"
-description = "transgo 命令行客户端"
+name = "transgo-gui"
+description = "transgo 图形界面：封装核心库服务的独立翻译窗口"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[[bin]]
-name = "transgo"
-path = "src/main.rs"
-
 [dependencies]
 transgo-core.workspace = true
-transgo-gui.workspace = true
-clap.workspace = true
-serde_json.workspace = true
+arboard.workspace = true
+eframe.workspace = true
+fontdb.workspace = true
 tokio.workspace = true

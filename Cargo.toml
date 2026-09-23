@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/transgo-core", "crates/transgo-cli"]
+members = ["crates/transgo-core", "crates/transgo-cli", "crates/transgo-gui"]
 
 [workspace.package]
 version = "0.1.1"
@@ -11,13 +11,17 @@ rust-version = "1.75"
 
 [workspace.dependencies]
 transgo-core = { path = "crates/transgo-core" }
+transgo-gui = { path = "crates/transgo-gui" }
 
 anyhow = "1"
+arboard = { version = "3", features = ["wayland-data-control"] }
 async-trait = "0.1"
 base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
 dirs = "6"
+eframe = "0.27"
+fontdb = "0.24"
 hex = "0.4"
 hmac = "0.12"
 md-5 = "0.10"

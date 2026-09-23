@@ -30,8 +30,10 @@ crates/
 │           ├── google.rs       Google Cloud Translation v2
 │           ├── youdao.rs       有道智云（SHA-256 hex 签名）
 │           └── openai.rs       任意 OpenAI 兼容接口
-└── transgo-cli/            transgo 可执行文件
-    └── src/main.rs         参数解析、子命令、输出格式化
+├── transgo-cli/            transgo 可执行文件
+│   └── src/main.rs         参数解析、子命令、输出格式化
+└── transgo-gui/            图形界面（eframe/egui），封装核心库
+    └── src/lib.rs          翻译窗口、后台翻译线程、系统字体挂载
 ```
 
 约 3500 行，含 20 个单元测试。
@@ -53,7 +55,7 @@ crates/
 ```
 
 `transgo-core` 拿到 `Request { text, from, to }` 就能返回 `Translation`，
-完全不知道上层是 CLI 还是 GUI、也不关心语种方向是谁决定的。GUI 阶段直接复用，不用改 core。
+完全不知道上层是 CLI 还是 GUI、也不关心语种方向是谁决定的。GUI 直接复用，不用改 core。
 
 ---
 

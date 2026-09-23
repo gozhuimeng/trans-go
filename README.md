@@ -24,6 +24,8 @@ $ transgo -t ja "你好"
 - 语种方向自动决策，出问题时可以手动覆盖
 - 单二进制，运行期零外部依赖，不调 `curl`、不调 `wl-paste`，拷过去就能跑
 - 不监听全局按键、不跑守护进程，快捷键由桌面环境直接调起
+- 图形界面随手可开：`transgo gui` 空白窗口，`transgo gui --clip` 预填剪贴板并直接翻一次。
+  回车翻译、Shift + 回车换行、译文一键复制
 
 为什么强调 Wayland 友好？Wayland 出于安全设计不允许应用自行监听全局按键。pot 一类工具在
 Hyprland 下「注册不了快捷键、只能开端口绕过」，根因就在这里，跟实现质量没关系。transgo 不跟
@@ -111,6 +113,8 @@ Options:
 | `transgo engines -v` | 附带申请地址 |
 | `transgo lang` | 列出支持的语种 |
 | `transgo lang -e baidu` | 只看某个引擎支持的语种 |
+| `transgo gui` | 打开图形界面翻译窗口 |
+| `transgo gui --clip` | 窗口预填剪贴板内容并直接翻译 |
 | `transgo config path` | 配置文件路径 |
 | `transgo config list` | 列出全部配置项 |
 | `transgo config get <KEY>` | 读取单项 |
@@ -255,7 +259,7 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 ## 路线图
 
 - [x] **M1** CLI 主体 + 11 个官方翻译引擎 + 配置管理
-- [ ] **M2** GUI（`transgo gui` / `transgo gui --clip`）
+- [x] **M2** GUI（`transgo gui` / `transgo gui --clip`）
       独立输入翻译窗口，封装 CLI 的核心库；不监听剪贴板、不监听全局按键
 - [ ] 划词翻译（模拟 Ctrl+C + 读剪贴板，需装 `wtype`）
 - [ ] 截图 OCR 翻译（`grim` + `slurp` + `tesseract`）

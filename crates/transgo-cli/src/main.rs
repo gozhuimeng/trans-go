@@ -62,7 +62,7 @@ fn restore_sigpipe() {}
 /// clap 无法在一个命令里同时容纳「贪婪的位置参数」和「子命令」而不产生歧义，
 /// 所以这里在解析前把默认子命令补上。判定是纯字符串比较，行为可预测。
 fn normalize_argv() -> Vec<OsString> {
-    const VERBS: &[&str] = &["translate", "t", "tr", "engines", "config", "lang", "help"];
+    const VERBS: &[&str] = &["translate", "t", "tr", "engines", "config", "lang", "gui", "help"];
     const GLOBALS: &[&str] = &["-h", "--help", "-V", "--version"];
 
     let mut argv: Vec<OsString> = std::env::args_os().collect();
@@ -83,6 +83,7 @@ stdout 只有译文本身，元信息一律走 stderr，可以直接进管道。
   transgo -t ja "你好"            指定目标语
   transgo -e deepl "hello"        指定翻译引擎
   transgo --json "hello"          完整结果，便于脚本处理
+  transgo gui --clip              打开窗口翻译剪贴板内容
 
 语种代码见 transgo lang，翻译引擎见 transgo engines。"#;
 
@@ -117,7 +118,12 @@ enum Cmd {
 
     /// 列出支持的语种
     Lang(LangArgs),
-}#[derive(Args)]
+
+    /// 打开图形界面翻译窗口
+    Gui(GuiArgs),
+}
+
+#[derive(Args)]
 struct TranslateArgs {
     /// 要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
     #[arg(value_name = "TEXT")]
@@ -166,6 +172,13 @@ struct LangArgs {
     engine: Option<String>,
 }
 
+#[derive(Args)]
+struct GuiArgs {
+    /// 启动时读一次剪贴板，预填源文本并直接翻一次
+    #[arg(long)]
+    clip: bool,
+}
+
 #[derive(Subcommand)]
 enum ConfigCmd {
     /// 显示配置文件路径
@@ -211,6 +224,7 @@ async fn run(cli: Cli) -> Result<(), Error> {
         Cmd::Engines(a) => cmd_engines(a).await,
         Cmd::Config { action } => cmd_config(action),
         Cmd::Lang(a) => cmd_lang(a),
+        Cmd::Gui(a) => transgo_gui::run(a.clip).map_err(Error::Other),
     }
 }
 

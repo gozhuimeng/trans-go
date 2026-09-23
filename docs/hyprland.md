@@ -25,7 +25,7 @@ bind = SUPER, T, exec, wl-paste | transgo | wl-copy
 # 翻译剪贴板内容并弹出通知
 bind = SUPER SHIFT, T, exec, notify-send "译文" "$(wl-paste | transgo)"
 
-# GUI 阶段（M2）
+# 图形界面窗口
 bind = SUPER, V, exec, transgo gui --clip   # 唤出并预填剪贴板
 bind = SUPER, G, exec, transgo gui          # 唤出空白窗口
 ```
@@ -108,7 +108,7 @@ history | fzf | transgo
 
 ---
 
-## GUI 阶段（M2）的窗口规则
+## GUI 窗口规则
 
 GUI 是独立窗口，用 Wayland 的 `app_id` 让你能精确控制：
 
