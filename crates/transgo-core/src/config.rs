@@ -222,6 +222,29 @@ impl Config {
 
     /// 以点分路径写入。值为空串表示清除。
     pub fn set(&mut self, dotted: &str, value: &str) -> Result<()> {
+        let leaf = if value.is_empty() {
+            serde_json::Value::Null
+        } else {
+            parse_scalar(value)
+        };
+        // parse_scalar 是对称的：纯数字、true/false 会按语义解析，此时没有退回余地；
+        // 否则写入失败后还会按原样字符串再试一次（纯数字的百度 APP ID 走这条路）
+        let no_fallback = leaf == serde_json::Value::String(value.to_string());
+        match self.with_leaf(dotted, leaf) {
+            Ok(next) => {
+                *self = next;
+                Ok(())
+            }
+            Err(first) if no_fallback => Err(first),
+            Err(_) => {
+                *self = self.with_leaf(dotted, serde_json::Value::String(value.to_string()))?;
+                Ok(())
+            }
+        }
+    }
+
+    /// 返回一份写入了叶子值的新配置，不改动自身
+    fn with_leaf(&self, dotted: &str, leaf: serde_json::Value) -> Result<Config> {
         let mut doc = self.to_value()?;
         {
             let mut cursor = &mut doc;
@@ -243,16 +266,13 @@ impl Config {
             if !cursor.is_object() {
                 return Err(Error::Config(format!("没有配置项「{dotted}」")));
             }
-            let obj = cursor.as_object_mut().expect("已确认是对象");
-            if value.is_empty() {
-                obj.insert((*last).to_string(), serde_json::Value::Null);
-            } else {
-                obj.insert((*last).to_string(), parse_scalar(value));
-            }
+            cursor
+                .as_object_mut()
+                .expect("已确认是对象")
+                .insert((*last).to_string(), leaf);
         }
-        *self = serde_json::from_value(doc)
-            .map_err(|e| Error::Config(format!("写入「{dotted}」失败: {e}")))?;
-        Ok(())
+        serde_json::from_value(doc)
+            .map_err(|e| Error::Config(format!("写入「{dotted}」失败: {e}")))
     }
 
     /// 列出全部点分路径（含未设置的），用于 `transgo config list`。
@@ -333,6 +353,19 @@ mod tests {
 
         c.set("deepl.api_key", "").unwrap();
         assert_eq!(c.get("deepl.api_key").unwrap(), None);
+    }
+
+    #[test]
+    fn set_numeric_value_falls_back_to_string_field() {
+        let mut c = Config::default();
+        // 纯数字（百度 APP ID 这类）进字符串字段：按语义解析失败后退回原样字符串
+        c.set("baidu.app_id", "12345678901234567").unwrap();
+        assert_eq!(c.get("baidu.app_id").unwrap().as_deref(), Some("12345678901234567"));
+        // 数字仍能进数值字段
+        c.set("default.timeout_secs", "15").unwrap();
+        assert_eq!(c.get("default.timeout_secs").unwrap().as_deref(), Some("15"));
+        // 进不了数值字段的仍如实报错
+        assert!(c.set("default.timeout_secs", "abc").is_err());
     }
 
     #[test]
