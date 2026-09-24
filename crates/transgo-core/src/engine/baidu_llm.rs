@@ -6,7 +6,7 @@
 //! 这边是认证后自动发放的一次性 100 万字符测试额度，不按月重置；
 //! 用完后 49 元/百万字符扣余额，余额不足报 54004，次日结算，无自动充值。
 //!
-//! 鉴权两种都行：Bearer API Key（推荐，配置 `baidu.api_key`），
+//! 鉴权两种都行：Bearer API Key（配置 `baidu.api_key`），
 //! 或与通用翻译相同的 `MD5(appid + q + salt + key)` 签名。
 
 use async_trait::async_trait;
