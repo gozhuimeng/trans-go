@@ -1,50 +1,78 @@
-//! 统一错误类型。所有面向用户的文案都是中文，CLI 直接打印即可。
+//! 统一错误类型。面向用户的文案按 [`crate::i18n`] 的界面语言出中/英文，CLI 直接打印即可。
 
+use crate::i18n::{ui_lang, UiLang};
 use crate::Lang;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("引擎「{0}」未配置，用 transgo config 填入 API Key，申请地址看 transgo engines")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("引擎「{}」未配置，用 transgo config 填入 API Key，申请地址看 transgo engines", .0),
+        UiLang::En => format!("Engine '{}' is not configured. Add an API key with transgo config; see transgo engines for signup URLs", .0),
+    })]
     NotConfigured(&'static str),
 
-    #[error("未知引擎「{0}」，可用引擎见 transgo engines")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("未知引擎「{}」，可用引擎见 transgo engines", .0),
+        UiLang::En => format!("Unknown engine '{}'. See transgo engines for available ids", .0),
+    })]
     UnknownEngine(String),
 
-    #[error("未知语种代码「{0}」，可用语种见 transgo lang")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("未知语种代码「{}」，可用语种见 transgo lang", .0),
+        UiLang::En => format!("Unknown language code '{}'. See transgo lang for available codes", .0),
+    })]
     UnknownLang(String),
 
-    #[error("引擎「{engine}」不支持 {from} → {to} 这个方向")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("引擎「{}」不支持 {} → {} 这个方向", .engine, .from, .to),
+        UiLang::En => format!("Engine '{}' does not support {} → {}", .engine, .from, .to),
+    })]
     UnsupportedPair {
         engine: &'static str,
         from: String,
         to: String,
     },
 
-    #[error("网络请求失败: {0}")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("网络请求失败: {}", .0),
+        UiLang::En => format!("Network request failed: {}", .0),
+    })]
     Http(#[from] reqwest::Error),
 
-    #[error("{engine} 返回错误 [{code}]: {message}")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("{} 返回错误 [{}]: {}", .engine, .code, .message),
+        UiLang::En => format!("{} returned error [{}]: {}", .engine, .code, .message),
+    })]
     Api {
         engine: &'static str,
         code: String,
         message: String,
     },
 
-    #[error("{engine} 返回了无法解析的响应: {message}")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("{} 返回了无法解析的响应: {}", .engine, .message),
+        UiLang::En => format!("{} returned an unparseable response: {}", .engine, .message),
+    })]
     BadResponse {
         engine: &'static str,
         message: String,
     },
 
-    #[error("配置错误: {0}")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("配置错误: {}", .0),
+        UiLang::En => format!("Configuration error: {}", .0),
+    })]
     Config(String),
 
     #[error("{0}")]
     Usage(String),
 
-    #[error("IO 错误: {0}")]
+    #[error("{}", match ui_lang() {
+        UiLang::Zh => format!("IO 错误: {}", .0),
+        UiLang::En => format!("IO error: {}", .0),
+    })]
     Io(#[from] std::io::Error),
 
     #[error("{0}")]
@@ -68,10 +96,14 @@ impl Error {
     }
 
     pub fn unsupported_pair(engine: &'static str, from: Lang, to: Lang) -> Self {
+        let (from_n, to_n) = match ui_lang() {
+            UiLang::Zh => (from.name_zh(), to.name_zh()),
+            UiLang::En => (from.name_en(), to.name_en()),
+        };
         Error::UnsupportedPair {
             engine,
-            from: from.name_zh().to_string(),
-            to: to.name_zh().to_string(),
+            from: from_n.to_string(),
+            to: to_n.to_string(),
         }
     }
 
