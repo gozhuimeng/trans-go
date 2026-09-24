@@ -285,7 +285,8 @@ $ transgo config set azure.region eastasia      # 多服务资源/区域资源�
 
 1. 打开 <https://console.cloud.google.com/>，建一个项目
 2. 启用 Cloud Translation API（<https://console.cloud.google.com/apis/library/translate.googleapis.com>）
-3. 创建结算账号并绑定到项目，免费额度用的是每月 $10 赠金，正常用量不会真扣钱
+3. 创建结算账号并绑定到项目，免费额度用的是每月 $10 赠金，50 万字符以内不会真扣钱；
+   **超出免费额度会从绑定的卡实际扣费**，用量大要注意额度监控
 4. 在 API 和服务 → 凭据 里创建 API 密钥
 
 **配置**
@@ -359,7 +360,7 @@ $ transgo config set mymemory.email you@example.com
 典型症状是把术语表条目当译文原样返回（`hello world` → `hello world`）。
 这是数据问题，换路由解决不了。
 
-定位是没配任何 Key 时先能用；配好 `deepl` / `tencent` 后 transgo 会自动跳过它。
+定位是没配任何 Key 时先能用；配好任意一家后 transgo 会自动跳过它。
 
 ---
 
