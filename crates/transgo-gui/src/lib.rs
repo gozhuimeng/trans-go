@@ -323,6 +323,11 @@ impl eframe::App for App {
             }
         }
 
+        // ESC 一键关窗：不挑桌面环境，不用去点右上角
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
+
         // 回车触发翻译：吃掉未加 Shift 的 Enter（连同它产生的换行），Shift + Enter 留给换行
         let mut enter = false;
         ctx.input_mut(|i| {
