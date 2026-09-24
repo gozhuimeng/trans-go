@@ -3,6 +3,9 @@
 ## 新登记
 
 - [x] 英文文档：`README_EN.md`、`docs_en/`（已完成；中文版为主，不一致时以中文为准）
+- [ ] 新增配置项：设置 CLI 与 GUI 的界面语言，短期内只支持 zh / en
+      范围：CLI 帮助、7 处报错、配置模板注释、GUI 文字、引擎额度/名称文案；
+      成本大头是报错文案与 troubleshooting.md 的七处逐字同步机制要按语言各备一套
 - [ ] 接入 Anthropic（Messages API）
       非 OpenAI 兼容格式：`/v1/messages`、`x-api-key` + `anthropic-version` 头，宜做独立引擎；
       无免费额度（按量计费），文档如实标注即可

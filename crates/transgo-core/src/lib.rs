@@ -10,6 +10,7 @@ pub mod config;
 pub mod detect;
 pub mod engine;
 pub mod error;
+pub mod i18n;
 pub mod lang;
 pub mod types;
 

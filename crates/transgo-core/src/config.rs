@@ -126,6 +126,14 @@ pub struct LlmCfg {
     pub temperature: Option<f64>,
 }
 
+/// 界面显示配置（CLI 与 GUI 共用）
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct UiCfg {
+    /// 界面语言：`zh` / `en`，默认 `zh`。同时控制 CLI 帮助、报错与 GUI 文字
+    pub lang: Option<String>,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GuiCfg {
@@ -137,6 +145,7 @@ pub struct GuiCfg {
 #[serde(default)]
 pub struct Config {
     pub default: Defaults,
+    pub ui: UiCfg,
     pub gui: GuiCfg,
     pub mymemory: MyMemoryCfg,
     pub deepl: DeepLCfg,
@@ -209,6 +218,7 @@ impl Config {
                 self.gui.font_scale = Some(n);
             }
         }
+        overlay!(self.ui.lang, "TRANSGO_UI_LANG");
         overlay!(self.mymemory.email, "TRANSGO_MYMEMORY_EMAIL");
         overlay!(self.deepl.api_key, "TRANSGO_DEEPL_API_KEY");
         overlay!(self.deepl.plan, "TRANSGO_DEEPL_PLAN");
