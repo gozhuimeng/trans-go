@@ -415,7 +415,7 @@ $ transgo config set youdao.app_secret 你的应用密钥
 | Google | `google.api_key` | `TRANSGO_GOOGLE_API_KEY` |
 | 有道 | `youdao.app_key` / `youdao.app_secret` | `TRANSGO_YOUDAO_APP_KEY` / `_APP_SECRET` |
 | LLM | `llm.api_key` / `llm.base_url` / `llm.model` | `TRANSGO_LLM_API_KEY` / `_BASE_URL` / `_MODEL` |
-| 界面 | `gui.font_scale` | `TRANSGO_GUI_FONT_SCALE` |
+| 界面 | `ui.lang` / `gui.font_scale` | `TRANSGO_UI_LANG` / `TRANSGO_GUI_FONT_SCALE` |
 | MyMemory | `mymemory.email` | `TRANSGO_MYMEMORY_EMAIL` |
 | 全局 | `default.engine` / `default.to` / `default.from` / `default.lang` / `default.timeout_secs` | `TRANSGO_ENGINE` / `TRANSGO_TO` / `TRANSGO_FROM` / `TRANSGO_DEFAULT_LANG` |
 

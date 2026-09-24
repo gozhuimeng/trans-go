@@ -242,6 +242,9 @@ from = "auto"
 # lang = "en"          # 第三方语言（日韩俄阿等）翻向 zh 或 en，默认 en
 timeout_secs = 15
 
+[ui]
+lang = "zh"            # 界面语言：zh 或 en（CLI 帮助、报错、GUI 文字一起切）
+
 [deepl]
 api_key = ""           # 免费 Key 以 `:fx` 结尾，会自动走 api-free.deepl.com
 
@@ -254,6 +257,9 @@ model = "gpt-4o-mini"
 [gui]
 font_scale = 1.0           # 字体缩放（0.5 ~ 3.0），笔记本/外接屏字号不一致时调
 ```
+
+界面语言（CLI 帮助、报错、GUI 文字一起切）由 `ui.lang` 控制，
+`transgo config set ui.lang en` 切到英文。
 
 环境变量优先于配置文件，方便脚本临时覆盖：
 `TRANSGO_DEEPL_API_KEY`、`TRANSGO_TENCENT_SECRET_ID`、`TRANSGO_LLM_MODEL`…

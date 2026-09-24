@@ -70,7 +70,7 @@ Checks in order:
 
 ## Network problems
 
-**Symptom**: `transgo: 网络请求失败: ...` with exit code `1`.
+**Symptom**: `transgo: Network request failed: ...` with exit code `1`.
 
 Google and Azure may be unreachable from mainland China: `google` depends on
 `translation.googleapis.com` and needs a network environment of your own. Reachable without
@@ -92,19 +92,18 @@ $ HTTPS_PROXY=http://127.0.0.1:7890 transgo "hello"
 
 ## Error reference
 
-transgo errors look like `transgo: <engine> 返回错误 [<code>]: <message>` (the engine name
-and message are in Chinese). Codes followed by a Chinese parenthetical hint are common causes
-transgo already recognizes.
+transgo errors look like `transgo: <engine> returned error [<code>]: <message>`.
+Codes followed by a parenthetical hint are common causes transgo already recognizes.
 
 ### General
 
 | Symptom | Cause |
 |---|---|
-| `引擎「xxx」未配置` | No API key. Apply for one at [engines.md](engines.md), then `transgo config set` |
-| `未知引擎「xxx」` | Wrong `-e` value; `transgo engines` lists valid ids |
-| `未知语种代码「xxx」` | `transgo lang` lists valid codes |
-| `引擎「xxx」不支持 a → b` | That direction is outside the engine's language range. Use another engine, or `transgo lang -e xxx` to see the range |
-| `没有要翻译的文本` | No argument and stdin is a terminal. Pass `transgo "text"` or pipe it in |
+| `Engine 'xxx' is not configured` | No API key. Apply for one at [engines.md](engines.md), then `transgo config set` |
+| `Unknown engine 'xxx'` | Wrong `-e` value; `transgo engines` lists valid ids |
+| `Unknown language code 'xxx'` | `transgo lang` lists valid codes |
+| `Engine 'xxx' does not support a → b` | That direction is outside the engine's language range. Use another engine, or `transgo lang -e xxx` to see the range |
+| `No text to translate` | No argument and stdin is a terminal. Pass `transgo "text"` or pipe it in |
 
 ### DeepL
 
@@ -272,7 +271,7 @@ Check in this order:
 |---|---|
 | Pressing the hotkey again opens no second window | Singleton design: the existing window is focused. With `--clip`, the text is sent into it and translated |
 | Chinese shows as boxes | No CJK system font. Install one (on Arch: `noto-fonts-cjk`); transgo mounts system fonts automatically |
-| `transgo gui` reports "启动图形界面失败" | The shell is outside a graphical session, or the compositor provides no OpenGL |
+| `transgo gui` reports "Failed to start the GUI" | The shell is outside a graphical session, or the compositor provides no OpenGL |
 | `--clip` starts with an empty source box | The clipboard is empty, or not plain text |
 | Enter does nothing | Enter with an empty source box is a no-op. Shift+Enter inserts a newline rather than translating |
 

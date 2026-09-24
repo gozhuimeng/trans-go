@@ -368,7 +368,12 @@ async fn run(cli: Cli) -> Result<(), Error> {
         Cmd::Engines(a) => cmd_engines(a).await,
         Cmd::Config { action } => cmd_config(action),
         Cmd::Lang(a) => cmd_lang(a),
-        Cmd::Gui(a) => transgo_gui::run(a.clip).map_err(Error::Other),
+        Cmd::Gui(a) => transgo_gui::run(a.clip).map_err(|e| {
+            Error::Other(match i18n::ui_lang() {
+                UiLang::Zh => format!("启动图形界面失败: {e}"),
+                UiLang::En => format!("Failed to start the GUI: {e}"),
+            })
+        }),
         Cmd::Completions { shell } => {
             let mut cmd = <Cli as clap::CommandFactory>::command();
             clap_complete::generate(shell, &mut cmd, "transgo", &mut std::io::stdout());

@@ -263,6 +263,9 @@ from = "auto"
 # lang = "en"          # third languages (ja/ko/ru/ar/…) translate to zh or en, default en
 timeout_secs = 15
 
+[ui]
+lang = "zh"            # UI language: zh or en (CLI help, errors and GUI text switch together)
+
 [deepl]
 api_key = ""           # free keys end in `:fx` and route to api-free.deepl.com
 
@@ -275,6 +278,9 @@ model = "gpt-4o-mini"
 [gui]
 font_scale = 1.0           # font scale (0.5 ~ 3.0), for laptop vs external monitor
 ```
+
+The UI language (CLI help, errors and GUI text together) is set by `ui.lang`;
+`transgo config set ui.lang en` switches to English.
 
 Environment variables override the config file, handy for one-off script overrides:
 `TRANSGO_DEEPL_API_KEY`, `TRANSGO_TENCENT_SECRET_ID`, `TRANSGO_LLM_MODEL`…

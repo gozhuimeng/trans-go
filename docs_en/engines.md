@@ -467,7 +467,7 @@ case); environment variables take precedence over the config file.
 | Google | `google.api_key` | `TRANSGO_GOOGLE_API_KEY` |
 | Youdao | `youdao.app_key` / `youdao.app_secret` | `TRANSGO_YOUDAO_APP_KEY` / `_APP_SECRET` |
 | LLM | `llm.api_key` / `llm.base_url` / `llm.model` | `TRANSGO_LLM_API_KEY` / `_BASE_URL` / `_MODEL` |
-| GUI | `gui.font_scale` | `TRANSGO_GUI_FONT_SCALE` |
+| GUI | `ui.lang` / `gui.font_scale` | `TRANSGO_UI_LANG` / `TRANSGO_GUI_FONT_SCALE` |
 | MyMemory | `mymemory.email` | `TRANSGO_MYMEMORY_EMAIL` |
 | Global | `default.engine` / `default.to` / `default.from` / `default.lang` / `default.timeout_secs` | `TRANSGO_ENGINE` / `TRANSGO_TO` / `TRANSGO_FROM` / `TRANSGO_DEFAULT_LANG` |
 
