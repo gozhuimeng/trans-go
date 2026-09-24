@@ -236,15 +236,15 @@ automatically afterwards.
 
 ### The direction is reversed
 
-The `auto` rule is "Chinese to English, everything else to Chinese", decided by character
-ratio. Boundary cases flip:
+The `auto` rule is "Chinese and English swap; third languages follow `default.lang`", decided
+by character classes. Boundary cases flip:
 
 | Input | Decision | Note |
 |---|---|---|
 | `iPhone手机很好用` | Chinese — correct | An English opening doesn't matter; the whole text counts |
 | `那个 meeting 的议程定了` | Chinese — correct | A few English words don't matter |
-| `The 会议 will be held tomorrow` | English — correct | Too few Chinese characters |
-| `我很喜欢カタカナ` | Japanese — wrong | **Known limitation**: Chinese with katakana mixed in is statistically identical to Japanese |
+| `The 会议 will be held tomorrow` | English direction — correct | Too few Chinese characters |
+| `我很喜欢カタカナ` | Japanese — wrong | **Known limitation**: Chinese with katakana mixed in is statistically identical to Japanese, so it follows the third-language direction |
 
 Manual override:
 

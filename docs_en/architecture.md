@@ -132,17 +132,21 @@ How it is handled:
 
 ## Target language decision
 
-One rule: Chinese becomes English, everything else becomes Simplified Chinese.
+Three rules: Chinese and English swap into each other; Latin-script text swaps in the English
+direction; non-Latin scripts follow `default.lang`.
 
-The judgment lives in `detect::is_chinese()`. Design points:
+The judgment lives in `detect::is_chinese()` and `detect::auto_target()`. Design points:
 
 - It looks at the character mix of the whole text (Chinese characters at 1/3 or more of
   letter-type characters), not the first character — otherwise Chinese starting with an
   English word, like「iPhone手机很好用」, gets misjudged
 - Digits, punctuation and whitespace are excluded. They look identical in every language;
   including them only dilutes the ratio and drags borderline cases around the threshold
-- Kana or hangul means non-Chinese immediately. They are exclusive to Japanese and Korean,
-  which sends Japanese-to-Chinese and Korean-to-Chinese down the translate-to-Chinese branch
+- Latin-script languages are deliberately not distinguished: characters can't separate
+  English from French from German, so they swap as one block in the English direction.
+  Fewer guesses, more certainty
+- Non-Latin scripts (Japanese, Korean, Russian, Arabic, …) follow `default.lang`
+  (`zh` / `en`, default `en`)
 
 `detect::detect()` is a different thing: it exists only for **display** (filling the `from`
 field of `-v` / `--json` when the engine doesn't report a detected source language). It does
@@ -151,10 +155,11 @@ not affect the translation direction.
 ### Known limitation
 
 A Chinese sentence containing a whole katakana word (「我很喜欢カタカナ」) is judged as
-Japanese. Statistically the two are identical (roughly half Chinese characters, half kana).
-In theory "do kana runs interleave with kanji" (Japanese okurigana) could separate them, but
-the complexity isn't warranted for this edge case. Japanese is favored because
-Japanese-to-Chinese is the common need.
+Japanese and follows the third-language direction. Statistically the two are identical
+(roughly half Chinese characters, half kana) and cannot be separated — override with
+`-f` / `-t` when it guesses wrong. Likewise French, German and Spanish are indistinguishable
+from English by characters alone and all swap in the English direction; no further language
+guessing is attempted.
 
 ---
 

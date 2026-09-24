@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 use eframe::egui;
 use transgo_core::config::Config;
 use transgo_core::engine::{self, Engine};
+use transgo_core::detect;
 use transgo_core::{Lang, Request, Translation};
 
 /// 实例之间递的消息。协议是纯文本：`show`，或 `translate\n<文本>`
@@ -97,6 +98,7 @@ pub fn run(clip: bool) -> Result<(), String> {
 
     let cfg = Config::load().map_err(|e| e.to_string())?;
     let engines = engine::build_all(&cfg);
+    let third = detect::third_lang(cfg.default.lang.as_deref())?;
     let font_scale = cfg.gui.font_scale.unwrap_or(1.0).clamp(0.5, 3.0) as f32;
 
     let options = eframe::NativeOptions {
@@ -117,7 +119,7 @@ pub fn run(clip: bool) -> Result<(), String> {
                 let ctx = cc.egui_ctx.clone();
                 std::thread::spawn(move || listen_loop(listener, msg_tx, &ctx));
             }
-            Box::new(App::new(engines, preset, msg_rx))
+            Box::new(App::new(engines, preset, msg_rx, third))
         }),
     )
     .map_err(|e| e.to_string());
@@ -177,6 +179,8 @@ struct App {
     engine_idx: usize,
     from: Lang,
     to: Lang,
+    /// 第三方语言的转换方向（`default.lang`）
+    third: Lang,
     source: String,
     output: String,
     instruction: String,
@@ -198,6 +202,7 @@ impl App {
         engines: Vec<Arc<dyn Engine>>,
         preset: Option<String>,
         msg_rx: Receiver<AppMsg>,
+        third: Lang,
     ) -> Self {
         let configured: Vec<usize> = engines
             .iter()
@@ -212,6 +217,7 @@ impl App {
             engine_idx,
             from: Lang::Auto,
             to: Lang::Auto,
+            third,
             source: preset.clone().unwrap_or_default(),
             output: String::new(),
             instruction: String::new(),
@@ -235,8 +241,16 @@ impl App {
         if self.busy || self.source.trim().is_empty() {
             return;
         }
-        let req = Request::new(self.source.clone(), Some(self.from), Some(self.to))
-            .with_instruction(Some(self.instruction.clone()));
+        let req = {
+            // auto 方向在这里定：中英互转，第三方语言翻向 default.lang
+            let to = if self.to == Lang::Auto {
+                detect::auto_target(&self.source, self.third)
+            } else {
+                self.to
+            };
+            Request::new(self.source.clone(), Some(self.from), Some(to))
+                .with_instruction(Some(self.instruction.clone()))
+        };
         let Some(eng) = self.engines.get(self.engine_idx) else {
             self.error = Some("没有可用引擎，先用 transgo config 填入 API Key".into());
             return;
@@ -486,7 +500,7 @@ impl eframe::App for App {
 }
 
 fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
-    // 展示文字从短：「自动（中→英，其余→中）」能把顶栏撑爆，规则挪到悬停提示里
+    // 展示文字从短：完整规则挪到悬停提示里，别把顶栏撑爆
     let text = if *sel == Lang::Auto {
         if is_from {
             "自动检测".to_string()
@@ -503,7 +517,7 @@ fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
             let auto = if is_from {
                 "自动检测"
             } else {
-                "自动（中→英，其余→中）"
+                "自动（中英互转）"
             };
             ui.selectable_value(sel, Lang::Auto, auto);
             for l in Lang::ALL {
@@ -512,7 +526,7 @@ fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
         });
     if !is_from {
         resp.response
-            .on_hover_text("目标语「自动」：中文译英文，其余译中文");
+            .on_hover_text("目标语「自动」：中英互转；日韩俄等第三方语言翻向 default.lang（默认英文）");
     }
 }
 

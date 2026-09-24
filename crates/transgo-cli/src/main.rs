@@ -138,7 +138,7 @@ struct TranslateArgs {
     #[arg(value_name = "TEXT")]
     text: Vec<String>,
 
-    /// 目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文
+    /// 目标语种，如 zh / en / ja；auto = 中英互译，第三方语言看 default.lang
     #[arg(short = 't', long = "to", value_name = "LANG")]
     to: Option<String>,
 
@@ -265,6 +265,15 @@ async fn cmd_translate(a: TranslateArgs) -> Result<(), Error> {
     let cfg = Config::load()?;
     let from = parse_lang(a.from.as_deref().or(cfg.default.from.as_deref()))?;
     let to = parse_lang(a.to.as_deref().or(cfg.default.to.as_deref()))?;
+    // auto 方向在这里定：中英互转，第三方语言翻向 default.lang
+    let to = match to {
+        Some(l) if l != Lang::Auto => Some(l),
+        _ => {
+            let third = transgo_core::detect::third_lang(cfg.default.lang.as_deref())
+                .map_err(Error::Config)?;
+            Some(transgo_core::detect::auto_target(text, third))
+        }
+    };
     let req = Request::new(text, from, to).with_instruction(a.instruction);
 
     let eng: Arc<dyn Engine> = match a.engine.as_deref() {
@@ -480,10 +489,12 @@ const TEMPLATE: &str = r#"# transgo 配置文件
 [default]
 # 默认引擎 id（见 transgo engines）。留空则按优先级取第一个已配置的。
 engine = ""
-# 目标语种。auto = 中英互译（中文译英文，其余一律译中文）
+# 目标语种。auto = 中英互转，第三方语言翻向下面的 lang
 to = "auto"
 # 源语种。auto = 自动检测
 from = "auto"
+# 第三方语言（日韩俄阿等非中非英）翻向哪种语言：zh 或 en，默认 en。中英之间永远互转
+# lang = "en"
 # 请求超时（秒）
 timeout_secs = 15
 

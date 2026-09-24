@@ -132,7 +132,7 @@ Arguments:
   [TEXT]...  要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
 
 Options:
-  -t, --to <LANG>           目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文
+  -t, --to <LANG>           目标语种，如 zh / en / ja；auto = 中英互译，第三方语言看 default.lang
   -f, --from <LANG>         源语种，不填就自动检测
   -e, --engine <ID>         翻译引擎，不填则取第一个已配置的
   -i, --instruction <TEXT>  翻译指令，控制文风（仅 baidu-llm 生效），如「采用意译」
@@ -171,25 +171,27 @@ Scripts can use these to tell a missing key from an upstream failure.
 
 ## Language rules
 
-The default is `--to auto`, with a single rule:
+The default is `--to auto`, with three rules:
 
 | Source text | Target |
 |---|---|
 | Chinese | English |
-| Not Chinese | Simplified Chinese |
+| Latin-script text (English, French, German, Spanish, …) | Simplified Chinese |
+| Everything else (Japanese, Korean, Russian, Arabic, …) | whatever `default.lang` says (default English) |
+
+Chinese and English always swap into each other. Latin-script languages are not told apart —
+characters cannot separate English from French from German, so they are treated as one block
+in the English direction. Non-Latin scripts follow `default.lang` (`zh` / `en`, default `en`).
 
 The decision looks at the character mix of the whole text (Chinese characters at 1/3 or more
 of letter-type characters), not the first character, so Chinese text starting with an English
 word such as「iPhone手机很好用」is not misjudged. Digits, punctuation and whitespace are
 excluded from the count — they look the same in every language and only dilute the ratio.
-Kana and hangul are exclusive to Japanese and Korean, so spotting either immediately means
-non-Chinese; Japanese-to-Chinese and Korean-to-Chinese therefore follow the translate-to-Chinese
-branch.
 
 Known limitation: a Chinese sentence containing a whole katakana word
-(e.g.「我很喜欢カタカナ」) is judged as Japanese. The two cases are identical in character
-statistics and cannot be separated; Japanese is favored because Japanese-to-Chinese is the
-more common need.
+(e.g.「我很喜欢カタカナ」) is judged as Japanese and follows the third-language direction.
+The two cases are identical in character statistics and cannot be separated; use `-f` / `-t`
+to override when it guesses wrong.
 
 ### Manual override when it guesses wrong
 
@@ -256,8 +258,9 @@ $ transgo config set deepl.api_key YOUR_KEY
 ```toml
 [default]
 engine = ""            # leave empty to take the first configured engine by priority
-to = "auto"            # auto = Chinese to English, everything else to Chinese
+to = "auto"            # auto = Chinese/English swap; third languages follow lang
 from = "auto"
+# lang = "en"          # third languages (ja/ko/ru/ar/…) translate to zh or en, default en
 timeout_secs = 15
 
 [deepl]

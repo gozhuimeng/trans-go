@@ -18,7 +18,9 @@ pub struct Request {
 }
 
 impl Request {
-    /// 组装请求。`to` 为 `None`/`Auto` 时自动决策：**中文译英文，其余一切译中文**。
+    /// 组装请求。`to` 为 `None`/`Auto` 时自动决策：**中英互转，第三方语言翻向英文**。
+    /// 第三方方向可配置时由调用方先解析好 `to` 传进来（CLI / GUI 都是这么做的），
+    /// 这里只是兜底。
     ///
     /// 判定依据是 [`crate::detect::is_chinese`]（看整段字符构成，不是首字）。
     /// 用户随时可以用 `-t` 覆盖。
@@ -26,7 +28,7 @@ impl Request {
         let text = text.into();
         let to = match to {
             Some(l) if l != Lang::Auto => l,
-            _ => crate::detect::auto_target(&text),
+            _ => crate::detect::auto_target(&text, Lang::En),
         };
         Request { text, from, to, instruction: None }
     }

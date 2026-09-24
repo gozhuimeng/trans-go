@@ -469,7 +469,7 @@ case); environment variables take precedence over the config file.
 | LLM | `llm.api_key` / `llm.base_url` / `llm.model` | `TRANSGO_LLM_API_KEY` / `_BASE_URL` / `_MODEL` |
 | GUI | `gui.font_scale` | `TRANSGO_GUI_FONT_SCALE` |
 | MyMemory | `mymemory.email` | `TRANSGO_MYMEMORY_EMAIL` |
-| Global | `default.engine` / `default.to` / `default.from` / `default.timeout_secs` | `TRANSGO_ENGINE` / `TRANSGO_TO` / `TRANSGO_FROM` |
+| Global | `default.engine` / `default.to` / `default.from` / `default.lang` / `default.timeout_secs` | `TRANSGO_ENGINE` / `TRANSGO_TO` / `TRANSGO_FROM` / `TRANSGO_DEFAULT_LANG` |
 
 `TRANSGO_CONFIG` points to a different config file entirely, handy for switching between key
 sets.

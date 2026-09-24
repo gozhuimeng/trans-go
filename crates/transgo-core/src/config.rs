@@ -35,6 +35,9 @@ pub struct Defaults {
     pub to: Option<String>,
     /// 默认源语种，`auto` = 自动检测
     pub from: Option<String>,
+    /// 第三方语言（日韩俄阿等非中非英）翻向哪种语言：`zh` / `en`，默认 `en`。
+    /// 中英之间永远互转，不受它影响
+    pub lang: Option<String>,
     /// 请求超时（秒）
     pub timeout_secs: Option<u64>,
 }
@@ -200,6 +203,7 @@ impl Config {
         overlay!(self.default.engine, "TRANSGO_ENGINE");
         overlay!(self.default.to, "TRANSGO_TO");
         overlay!(self.default.from, "TRANSGO_FROM");
+        overlay!(self.default.lang, "TRANSGO_DEFAULT_LANG");
         if let Ok(v) = std::env::var("TRANSGO_GUI_FONT_SCALE") {
             if let Ok(n) = v.trim().parse::<f64>() {
                 self.gui.font_scale = Some(n);

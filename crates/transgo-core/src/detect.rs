@@ -1,10 +1,11 @@
-//! 目标语决策：只回答「原文是不是中文」这一个问题。
+//! 目标语决策：把原文分到三条分支上。
 //!
-//! 默认规则就一条，没有别的分支：
+//! 默认规则：
 //!
 //! ```text
-//! 是中文     → 译成英文
-//! 不是中文   → 译成中文
+//! 中文                → 译成英文          （中英互转）
+//! 拉丁字母系          → 译成中文          （英法德西字符上分不开，统一按英文方向互转）
+//! 其余（日韩俄阿等）  → 译成 default.lang （第三方语言方向，默认英文）
 //! ```
 //!
 //! 判定看的是**整段文本的字符构成比例**，不看首字，否则
@@ -60,8 +61,8 @@ pub fn is_chinese(text: &str) -> bool {
     // 假名/谚文是日韩文的专属字符，中文里一个都不会有。
     //
     // 已知局限：中文句子里夹一整个片假名词（「我很喜欢カタカナ」）会被判成日文。
-    // 这两种情况在字符统计上完全一样（都是汉字与假名各半），区分不了。
-    // 优先照顾日文，是因为「日译中」是常态需求，反过来那种写法很少见。
+    // 这两种情况在字符统计上完全一样（都是汉字与假名各半），区分不了，
+    // 判错方向时用 -f / -t 手动覆盖。
     if kana_hangul > 0 {
         return false;
     }
@@ -80,13 +81,52 @@ pub fn is_chinese(text: &str) -> bool {
     han * CHINESE_RATIO.1 >= (han + other_letters) * CHINESE_RATIO.0
 }
 
-/// 目标语决策：中文译英文，其余一切译中文。
-pub fn auto_target(text: &str) -> Lang {
+/// 目标语决策：中英互转，第三方语言翻向 `third`（[`third_lang`] 解析 `default.lang` 得来）。
+pub fn auto_target(text: &str, third: Lang) -> Lang {
     if is_chinese(text) {
-        Lang::En
-    } else {
-        Lang::Zh
+        return Lang::En;
     }
+    // 拉丁字母系按英文方向互转（英法德西字符上分不开，只能一体对待）；
+    // 没有拉丁字母、但确有文字的日韩俄阿等走第三方方向。
+    // 只有数字标点、一个字母都没有的文本无从判断语种，按英文方向处理
+    if !has_latin(text) && has_letters(text) {
+        return third;
+    }
+    Lang::Zh
+}
+
+/// 解析第三方语言方向（`default.lang`）。
+/// 空 / 未设置 = 默认 `en`；`zh` / `en` 之外的值返回错误说明。
+pub fn third_lang(raw: Option<&str>) -> std::result::Result<Lang, String> {
+    match raw.unwrap_or("").trim().to_ascii_lowercase().as_str() {
+        "" | "en" => Ok(Lang::En),
+        "zh" => Ok(Lang::Zh),
+        other => Err(format!("default.lang 只支持 zh 或 en，当前是「{other}」")),
+    }
+}
+
+/// 文本里有没有拉丁字母（0x00C0..=0x024F 覆盖带附加符号的西欧字母）
+fn has_latin(text: &str) -> bool {
+    text.chars()
+        .any(|c| matches!(c as u32, 0x0041..=0x005A | 0x0061..=0x007A | 0x00C0..=0x024F))
+}
+
+/// 文本里有没有任何字母类字符（含假名谚文与汉字）
+fn has_letters(text: &str) -> bool {
+    text.chars().any(|c| {
+        matches!(
+            c as u32,
+            0x0041..=0x005A | 0x0061..=0x007A | 0x00C0..=0x024F // 拉丁
+            | 0x0370..=0x03FF // 希腊
+            | 0x0400..=0x052F // 西里尔
+            | 0x0600..=0x06FF | 0x0750..=0x077F | 0xFB50..=0xFDFF | 0xFE70..=0xFEFF // 阿拉伯
+            | 0x0900..=0x097F // 天城文
+            | 0x0590..=0x05FF // 希伯来
+            | 0x0E00..=0x0E7F // 泰文
+            | 0x1100..=0x11FF | 0x3040..=0x30FF | 0x3130..=0x318F | 0x31F0..=0x31FF | 0xAC00..=0xD7A3 // 假名谚文
+            | 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xF900..=0xFAFF // 汉字
+        )
+    })
 }
 
 /// 粗略的语种标注，**只用于展示**。
@@ -161,19 +201,36 @@ mod tests {
 
     #[test]
     fn japanese_and_korean_are_not_chinese() {
-        // 假名/谚文是专属字符，出现即非中文，否则日译中会被错译成日译英
+        // 假名/谚文是专属字符，出现即非中文
         assert!(!is_chinese("日本語を勉強しています"));
         assert!(!is_chinese("こんにちは、元気ですか"));
         assert!(!is_chinese("안녕하세요"));
     }
 
     #[test]
-    fn auto_target_flips_between_zh_and_en() {
-        assert_eq!(auto_target("知识就是力量"), Lang::En);
-        assert_eq!(auto_target("iPhone手机很好用"), Lang::En);
-        assert_eq!(auto_target("hello world"), Lang::Zh);
-        assert_eq!(auto_target("le temps est beau"), Lang::Zh);
-        assert_eq!(auto_target("日本語を勉強しています"), Lang::Zh);
+    fn auto_target_zh_en_swap_and_third_direction() {
+        // 中英互转
+        assert_eq!(auto_target("知识就是力量", Lang::En), Lang::En);
+        assert_eq!(auto_target("iPhone手机很好用", Lang::En), Lang::En);
+        assert_eq!(auto_target("hello world", Lang::En), Lang::Zh);
+        // 拉丁字母系分不开英法德西，统一按英文方向互转
+        assert_eq!(auto_target("le temps est beau", Lang::En), Lang::Zh);
+        // 第三方语言翻向配置的方向
+        assert_eq!(auto_target("日本語を勉強しています", Lang::En), Lang::En);
+        assert_eq!(auto_target("日本語を勉強しています", Lang::Zh), Lang::Zh);
+        assert_eq!(auto_target("안녕하세요", Lang::En), Lang::En);
+        assert_eq!(auto_target("Привет, мир", Lang::Zh), Lang::Zh);
+        // 只有数字标点、没有字母时无从判断，按英文方向
+        assert_eq!(auto_target("12345", Lang::En), Lang::Zh);
+    }
+
+    #[test]
+    fn third_lang_parsing() {
+        assert_eq!(third_lang(None), Ok(Lang::En));
+        assert_eq!(third_lang(Some("en")), Ok(Lang::En));
+        assert_eq!(third_lang(Some("zh")), Ok(Lang::Zh));
+        assert_eq!(third_lang(Some("ZH")), Ok(Lang::Zh));
+        assert!(third_lang(Some("jp")).is_err());
     }
 
     #[test]

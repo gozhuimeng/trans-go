@@ -2,8 +2,7 @@
 
 ## 新登记
 
-- [ ] 英文文档：`README_EN.md`、`docs_en/`
-      同步成本要评估：中文版每次改动都要跟一版，可考虑英文版标注「以中文版为准」
+- [x] 英文文档：`README_EN.md`、`docs_en/`（已完成；中文版为主，不一致时以中文为准）
 - [ ] 接入 Anthropic（Messages API）
       非 OpenAI 兼容格式：`/v1/messages`、`x-api-key` + `anthropic-version` 头，宜做独立引擎；
       无免费额度（按量计费），文档如实标注即可
