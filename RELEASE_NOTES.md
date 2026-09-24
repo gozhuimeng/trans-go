@@ -19,45 +19,25 @@
   同一份 workflow 能一直用下去，发新版不需要改它。
 -->
 
-## 行为变化
-
-- `auto` 方向的第三方语言（日韩俄阿等非拉丁文字）现在默认翻向**英文**，此前是翻向中文。
-  想要旧行为，一行配置即可：`default.lang = "zh"`
-
 ## 新增
 
-- 第三方语言方向可配置：`default.lang`（`zh` / `en`，默认 `en`；环境变量
-  `TRANSGO_DEFAULT_LANG`）。中英之间永远互转，不受它影响
-- 英文文档：`README_EN.md` 与 `docs_en/`（引擎指南、故障排查、桌面集成、实现说明）。
-  Release 正文从此中英双语，页尾文档链接也是双语
+- 界面语言可配置：`ui.lang`（`zh` / `en`，默认 `zh`；环境变量 `TRANSGO_UI_LANG`）。
+  一个字段同时切换 CLI 帮助、报错文案、配置模板、GUI 文字，以及引擎列表里的名称与额度。
+  引擎的错误提示括注与 CLI 表格标签暂为中文
 
-## 修复与改进
+## 修复
 
-- 文档中期体检：修正额度范围、退出码语义、窗口规则匹配方式（class 改 title）等 26 处
-  事实问题，补上「Google 超出会从绑定的卡实际扣费」的警示
-- 各引擎标注实测状态：4 个用真实请求验证过，7 个未实测
-- 欢迎提 Issues 与 PR
+- GUI 启动失败时给出明确报错，此前只透传底层错误信息
 
 ---
 
-## Behavior change
-
-- Third-party languages (Japanese, Korean, Russian, Arabic and other non-Latin scripts) now
-  translate to **English** by default under `auto`; previously to Chinese. The old behavior is
-  one config line away: `default.lang = "zh"`
-
 ## Added
 
-- Configurable third-language direction: `default.lang` (`zh` / `en`, default `en`; env
-  `TRANSGO_DEFAULT_LANG`). Chinese and English always swap and are unaffected
-- English documentation: `README_EN.md` and `docs_en/` (engine guide, troubleshooting,
-  desktop integration, implementation notes). Release notes are bilingual from now on, and the
-  docs links at the foot of the page come in both languages
+- Configurable interface language: `ui.lang` (`zh` / `en`, default `zh`; env
+  `TRANSGO_UI_LANG`). One field switches CLI help, error messages, the config template, GUI
+  text, and the engine names and quotas in listings. Engine error hints and CLI table labels
+  remain Chinese for now
 
-## Fixes and improvements
+## Fixes
 
-- Mid-term documentation audit: 26 factual fixes (quota ranges, exit-code semantics, window
-  rule matching — class to title — and more), plus a warning that Google charges the bound
-  card beyond the free quota
-- Per-engine test status documented: 4 verified with real requests, 7 untested
-- Issues and PRs welcome
+- GUI startup failures now report a clear message instead of raw underlying errors
