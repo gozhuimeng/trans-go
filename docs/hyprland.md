@@ -110,13 +110,14 @@ history | fzf | transgo
 
 ## GUI 窗口规则
 
-GUI 是独立窗口，用 Wayland 的 `app_id` 让你能精确控制：
+GUI 是独立窗口，用窗口规则控制即可。识别用标题匹配（窗口 title 是 `transgo`；
+class 在部分环境下为空，按 class 匹配会落空）：
 
 ```bash
 # 让翻译窗口浮在鼠标附近
-windowrulev2 = float, class:^(transgo)$
-windowrulev2 = pin, class:^(transgo)$
-windowrulev2 = stayfocused, class:^(transgo)$
+windowrulev2 = float, title:^(transgo)$
+windowrulev2 = pin, title:^(transgo)$
+windowrulev2 = stayfocused, title:^(transgo)$
 ```
 
 两个入口对应两种唤起方式：
@@ -126,7 +127,7 @@ windowrulev2 = stayfocused, class:^(transgo)$
 | `SUPER + G` | `transgo gui` | 唤出空白窗口 |
 | `SUPER + V` | `transgo gui --clip` | 唤出并预填剪贴板内容 |
 
-> transgo 不监听剪贴板、不监听按键。`--clip` 只是启动时读一次 `wl-paste` 的结果填进输入框，
+> transgo 不监听剪贴板、不监听按键。`--clip` 只是启动时读一次剪贴板内容填进输入框，
 > 由你在快捷键里显式要求。没有后台常驻、没有意外弹窗。
 
 ---
@@ -144,21 +145,21 @@ transgo 不需要这一层：
 | 守护进程 + D-Bus | 同样要常驻，且调试门槛更高 |
 | **CLI 直接调起**（transgo） | 无状态、无常驻、无监听。冷启动就是一个进程的启动时间 |
 
-需要「把译文回填到 GUI 窗口」这种跨进程状态时，再上 Unix socket 也不迟。
-那是 M2 的事，而且只是 GUI 内部的实现细节，不影响 CLI 的用法。
+需要跨进程状态时用的是 Unix socket：GUI 的单例消息（二次唤起聚焦已有窗口、
+`--clip` 把新文本送进去接着翻）就走这条路，属于 GUI 内部的实现细节，不影响 CLI 的用法。
 
 ---
 
 ## 相关工具
 
-这些是 transgo 在 Wayland 下常用的搭档，本机大多已具备：
+这些是 transgo 在 Wayland 下常用的搭档：
 
 | 工具 | 用途 | 备注 |
 |---|---|---|
 | `wl-clipboard` | `wl-paste` / `wl-copy` | 读写剪贴板 |
-| `wtype` | 向焦点窗口模拟按键 | 划词翻译（M3）需要，用来模拟 Ctrl+C |
-| `grim` + `slurp` | 截屏 + 区域选择 | 截图 OCR 翻译（M4） |
-| `tesseract` | OCR 识别 | 截图 OCR 翻译（M4） |
+| `wtype` | 向焦点窗口模拟按键 | 划词翻译需要，用来模拟 Ctrl+C |
+| `grim` + `slurp` | 截屏 + 区域选择 | 截图 OCR 翻译 |
+| `tesseract` | OCR 识别 | 截图 OCR 翻译 |
 | `libnotify` | `notify-send` | 译文通知 |
 
 ```console
