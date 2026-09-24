@@ -7,6 +7,8 @@
 //! 翻译在后台线程里跑（内部是 tokio 当前线程运行时），界面只在每帧轮询结果，
 //! 不阻塞事件循环。
 
+use std::io::{Read, Write};
+use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -16,9 +18,83 @@ use transgo_core::config::Config;
 use transgo_core::engine::{self, Engine};
 use transgo_core::{Lang, Request, Translation};
 
+/// 实例之间递的消息。协议是纯文本：`show`，或 `translate\n<文本>`
+enum AppMsg {
+    Show,
+    Translate(String),
+}
+
+fn encode(msg: &AppMsg) -> String {
+    match msg {
+        AppMsg::Show => "show".to_string(),
+        AppMsg::Translate(t) => format!("translate\n{t}"),
+    }
+}
+
+fn decode(raw: &str) -> Option<AppMsg> {
+    match raw {
+        "show" => Some(AppMsg::Show),
+        _ => raw
+            .strip_prefix("translate\n")
+            .map(|t| AppMsg::Translate(t.to_string())),
+    }
+}
+
+/// 实例间通信用的 socket，落在 XDG_RUNTIME_DIR（用户私有 tmpfs）
+fn socket_path() -> std::path::PathBuf {
+    let dir = std::env::var_os("XDG_RUNTIME_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir);
+    dir.join("transgo-gui.sock")
+}
+
+/// 单例闸门：已有实例在跑就把消息递过去并返回 true，调用方直接退出。
+/// 连不上就把残留的 socket 文件清掉，换新进程接管。
+fn notify_existing(msg: &AppMsg) -> bool {
+    let path = socket_path();
+    if let Ok(mut stream) = UnixStream::connect(&path) {
+        return stream.write_all(encode(msg).as_bytes()).is_ok();
+    }
+    let _ = std::fs::remove_file(&path);
+    false
+}
+
+fn bind_listener() -> Result<UnixListener, String> {
+    let path = socket_path();
+    UnixListener::bind(&path).map_err(|e| format!("监听 {} 失败: {e}", path.display()))
+}
+
+/// 后台线程：收第二个实例递来的消息，转给界面线程并触发重绘
+fn listen_loop(listener: UnixListener, tx: Sender<AppMsg>, ctx: &egui::Context) {
+    for stream in listener.incoming() {
+        let Ok(mut stream) = stream else {
+            continue;
+        };
+        let mut raw = String::new();
+        if stream.read_to_string(&mut raw).is_err() {
+            continue;
+        }
+        if let Some(msg) = decode(&raw) {
+            let _ = tx.send(msg);
+            ctx.request_repaint();
+        }
+    }
+}
+
 /// 界面入口。窗口关闭时返回。
 pub fn run(clip: bool) -> Result<(), String> {
     let preset = if clip { clipboard_text() } else { None };
+
+    // 单例：已有窗口就不开第二扇，把消息递过去（--clip 会把剪贴板文本送进去直翻）
+    let msg = match &preset {
+        Some(t) if !t.trim().is_empty() => AppMsg::Translate(t.clone()),
+        _ => AppMsg::Show,
+    };
+    if notify_existing(&msg) {
+        return Ok(());
+    }
+    let listener = bind_listener()?;
+
     let cfg = Config::load().map_err(|e| e.to_string())?;
     let engines = engine::build_all(&cfg);
 
@@ -29,16 +105,25 @@ pub fn run(clip: bool) -> Result<(), String> {
         ..Default::default()
     };
 
-    eframe::run_native(
+    let result = eframe::run_native(
         "transgo",
         options,
         Box::new(move |cc| {
             install_fonts(&cc.egui_ctx);
             setup_style(&cc.egui_ctx);
-            Box::new(App::new(engines, preset))
+            let (msg_tx, msg_rx) = mpsc::channel();
+            {
+                let ctx = cc.egui_ctx.clone();
+                std::thread::spawn(move || listen_loop(listener, msg_tx, &ctx));
+            }
+            Box::new(App::new(engines, preset, msg_rx))
         }),
     )
-    .map_err(|e| e.to_string())
+    .map_err(|e| e.to_string());
+
+    // 窗口关了把门牌摘掉；就算漏摘，下次启动的 notify_existing 也会清理残留
+    let _ = std::fs::remove_file(socket_path());
+    result
 }
 
 // ---------------------------------------------------------------- 后台翻译线程
@@ -94,6 +179,8 @@ struct App {
     source: String,
     output: String,
     instruction: String,
+    /// 启动后把焦点落到源输入框，省一次点击
+    focus_source: bool,
     status: String,
     error: Option<String>,
     busy: bool,
@@ -101,10 +188,16 @@ struct App {
     clip_loaded: bool,
     job_tx: Sender<Job>,
     done_rx: Receiver<Done>,
+    /// 从第二个实例递过来的消息
+    msg_rx: Receiver<AppMsg>,
 }
 
 impl App {
-    fn new(engines: Vec<Arc<dyn Engine>>, preset: Option<String>) -> Self {
+    fn new(
+        engines: Vec<Arc<dyn Engine>>,
+        preset: Option<String>,
+        msg_rx: Receiver<AppMsg>,
+    ) -> Self {
         let configured: Vec<usize> = engines
             .iter()
             .enumerate()
@@ -121,6 +214,7 @@ impl App {
             source: preset.clone().unwrap_or_default(),
             output: String::new(),
             instruction: String::new(),
+            focus_source: true,
             status: String::new(),
             error: None,
             busy: false,
@@ -128,6 +222,7 @@ impl App {
             clip_loaded: preset.is_some(),
             job_tx,
             done_rx,
+            msg_rx,
         };
         if app.clip_loaded {
             app.start_translate();
@@ -214,6 +309,20 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.poll_done();
 
+        // 第二个实例递来的消息：聚焦窗口，或换上新文本直接翻
+        while let Ok(msg) = self.msg_rx.try_recv() {
+            match msg {
+                AppMsg::Show => {
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+                }
+                AppMsg::Translate(text) => {
+                    self.source = text;
+                    self.start_translate();
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+                }
+            }
+        }
+
         // 回车触发翻译：吃掉未加 Shift 的 Enter（连同它产生的换行），Shift + Enter 留给换行
         let mut enter = false;
         ctx.input_mut(|i| {
@@ -299,12 +408,16 @@ impl eframe::App for App {
                 });
             });
 
-            ui.add(
+            let source_edit = ui.add(
                 egui::TextEdit::multiline(&mut self.source)
                     .desired_rows(8)
                     .desired_width(f32::INFINITY)
                     .hint_text("输入要翻译的文本，回车翻译，Shift + 回车换行"),
             );
+            if self.focus_source {
+                source_edit.request_focus();
+                self.focus_source = false;
+            }
 
             if enter {
                 self.start_translate();
@@ -491,4 +604,25 @@ fn set_clipboard(s: &str) -> bool {
     arboard::Clipboard::new()
         .and_then(|mut c| c.set_text(s.to_string()))
         .is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{decode, encode, AppMsg};
+
+    #[test]
+    fn relay_message_roundtrip() {
+        assert!(matches!(decode(&encode(&AppMsg::Show)), Some(AppMsg::Show)));
+        match decode(&encode(&AppMsg::Translate("知识就是力量".into()))) {
+            Some(AppMsg::Translate(t)) => assert_eq!(t, "知识就是力量"),
+            _ => panic!("translate 消息应能往返"),
+        }
+        // 多行文本不串行、脏消息不误认
+        let multi = "第一行\n第二行";
+        match decode(&encode(&AppMsg::Translate(multi.into()))) {
+            Some(AppMsg::Translate(t)) => assert_eq!(t, multi),
+            _ => panic!("多行文本应能往返"),
+        }
+        assert!(decode("garbage").is_none());
+    }
 }

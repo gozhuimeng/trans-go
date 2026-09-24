@@ -140,8 +140,8 @@ Options:
 | `transgo engines -v` | 附带申请地址 |
 | `transgo lang` | 列出支持的语种 |
 | `transgo lang -e baidu` | 只看某个引擎支持的语种 |
-| `transgo gui` | 打开图形界面翻译窗口 |
-| `transgo gui --clip` | 窗口预填剪贴板内容并直接翻译 |
+| `transgo gui` | 打开图形界面翻译窗口（单例：已开则聚焦） |
+| `transgo gui --clip` | 预填剪贴板直翻；已有窗口时把文本送进去接着翻 |
 | `transgo config path` | 配置文件路径 |
 | `transgo config list` | 列出全部配置项 |
 | `transgo config get <KEY>` | 读取单项 |

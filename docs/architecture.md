@@ -33,7 +33,7 @@ crates/
 ├── transgo-cli/            transgo 可执行文件
 │   └── src/main.rs         参数解析、子命令、输出格式化
 └── transgo-gui/            图形界面（eframe/egui），封装核心库
-    └── src/lib.rs          翻译窗口、后台翻译线程、系统字体挂载
+    └── src/lib.rs          翻译窗口、单例消息、后台翻译线程、系统字体挂载
 ```
 
 约 3500 行，含 20 个单元测试。
