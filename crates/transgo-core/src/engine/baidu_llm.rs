@@ -51,10 +51,10 @@ impl Engine for BaiduLlm {
         "baidu-llm"
     }
     fn name(&self) -> &'static str {
-        "百度大模型翻译"
+        crate::i18n::s("百度大模型翻译", "Baidu LLM Translate")
     }
     fn quota(&self) -> &'static str {
-        "认证后一次性 100 万字符测试额度，不按月重置"
+        crate::i18n::s("认证后一次性 100 万字符测试额度，不按月重置", "One-time 1 M-character test quota after identity verification, no monthly reset")
     }
     fn signup(&self) -> &'static str {
         "https://fanyi-api.baidu.com/choose"

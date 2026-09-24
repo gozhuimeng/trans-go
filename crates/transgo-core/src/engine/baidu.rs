@@ -105,10 +105,10 @@ impl Engine for Baidu {
         "baidu"
     }
     fn name(&self) -> &'static str {
-        "百度翻译"
+        crate::i18n::s("百度翻译", "Baidu Translate")
     }
     fn quota(&self) -> &'static str {
-        "标准版 5万/月；实名认证后高级版 100万/月"
+        crate::i18n::s("标准版 5万/月；实名认证后高级版 100万/月", "Standard 50 K/month; Advanced 1 M/month after identity verification")
     }
     fn signup(&self) -> &'static str {
         "https://fanyi-api.baidu.com/choose"

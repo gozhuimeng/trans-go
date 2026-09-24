@@ -97,10 +97,10 @@ impl Engine for Tencent {
         "tencent"
     }
     fn name(&self) -> &'static str {
-        "腾讯云机器翻译"
+        crate::i18n::s("腾讯云机器翻译", "Tencent TMT")
     }
     fn quota(&self) -> &'static str {
-        "500万字符/月（2026-09-30 止）"
+        crate::i18n::s("500万字符/月（2026-09-30 止）", "5 M characters/month (until 2026-09-30)")
     }
     fn signup(&self) -> &'static str {
         "https://cloud.tencent.com/document/product/551/40566"

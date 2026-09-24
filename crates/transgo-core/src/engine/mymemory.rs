@@ -48,7 +48,7 @@ impl Engine for MyMemory {
         "MyMemory"
     }
     fn quota(&self) -> &'static str {
-        "5千字符/天（留邮箱 5万）"
+        crate::i18n::s("5千字符/天（留邮箱 5万）", "5 K characters/day (50 K with an email)")
     }
     fn signup(&self) -> &'static str {
         "https://mymemory.translated.net/doc/usagelimits.php"

@@ -64,10 +64,10 @@ impl Engine for Aliyun {
         "aliyun"
     }
     fn name(&self) -> &'static str {
-        "阿里云机器翻译"
+        crate::i18n::s("阿里云机器翻译", "Alibaba Cloud MT")
     }
     fn quota(&self) -> &'static str {
-        "通用版 100万字符/月"
+        crate::i18n::s("通用版 100万字符/月", "General edition, 1 M characters/month")
     }
     fn signup(&self) -> &'static str {
         "https://help.aliyun.com/zh/machine-translation/product-overview/activate-service"

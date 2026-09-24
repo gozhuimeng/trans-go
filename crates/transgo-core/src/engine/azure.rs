@@ -90,7 +90,7 @@ impl Engine for Azure {
         "Azure AI Translator"
     }
     fn quota(&self) -> &'static str {
-        "200万字符/月"
+        crate::i18n::s("200万字符/月", "2 M characters/month")
     }
     fn signup(&self) -> &'static str {
         "https://learn.microsoft.com/zh-cn/azure/ai-services/translator/create-translator-resource"

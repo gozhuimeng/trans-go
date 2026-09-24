@@ -17,6 +17,7 @@ use eframe::egui;
 use transgo_core::config::Config;
 use transgo_core::engine::{self, Engine};
 use transgo_core::detect;
+use transgo_core::i18n::{self, s, UiLang};
 use transgo_core::{Lang, Request, Translation};
 
 /// 实例之间递的消息。协议是纯文本：`show`，或 `translate\n<文本>`
@@ -252,16 +253,15 @@ impl App {
                 .with_instruction(Some(self.instruction.clone()))
         };
         let Some(eng) = self.engines.get(self.engine_idx) else {
-            self.error = Some("没有可用引擎，先用 transgo config 填入 API Key".into());
+            self.error = Some(s("没有可用引擎，先用 transgo config 填入 API Key", "No engine available. Add an API key with transgo config first").to_string());
             return;
         };
         if !eng.supports(&req) {
-            self.error = Some(format!(
-                "{} 不支持 {} → {} 这个方向",
-                eng.name(),
-                req.from.map(|l| l.name_zh()).unwrap_or("自动"),
-                req.to.name_zh()
-            ));
+            let from_n = req.from.map(name_of).unwrap_or(s("自动", "Auto"));
+            self.error = Some(match i18n::ui_lang() {
+                UiLang::Zh => format!("{} 不支持 {} → {} 这个方向", eng.name(), from_n, name_of(req.to)),
+                UiLang::En => format!("{} does not support {} → {}", eng.name(), from_n, name_of(req.to)),
+            });
             return;
         }
         if self
@@ -272,7 +272,7 @@ impl App {
             })
             .is_err()
         {
-            self.error = Some("后台翻译线程已退出".into());
+            self.error = Some(s("后台翻译线程已退出", "The background translation thread has exited").to_string());
             return;
         }
         self.busy = true;
@@ -290,8 +290,8 @@ impl App {
                         self.status = format!(
                             "[{}] {} → {} · {:.0} ms",
                             t.engine,
-                            t.from.name_zh(),
-                            t.to.name_zh(),
+                            name_of(t.from),
+                            name_of(t.to),
                             done.ms
                         );
                     }
@@ -313,7 +313,7 @@ impl App {
         if set_clipboard(&self.output) {
             self.copied_at = Some(Instant::now());
         } else {
-            self.error = Some("写入剪贴板失败".into());
+            self.error = Some(s("写入剪贴板失败", "Failed to write to the clipboard").to_string());
         }
     }
 }
@@ -380,7 +380,7 @@ impl eframe::App for App {
                         self.engines
                             .get(self.engine_idx)
                             .map(|e| e.name())
-                            .unwrap_or("无可用引擎"),
+                            .unwrap_or(s("无可用引擎", "No engine available")),
                     )
                     .show_ui(ui, |ui| {
                         for (i, e) in self.engines.iter().enumerate() {
@@ -396,11 +396,14 @@ impl eframe::App for App {
 
             ui.add_space(2.0);
 
-            ui.collapsing("翻译指令（可选）", |ui| {
+            ui.collapsing(s("翻译指令（可选）", "Translation instruction (optional)"), |ui| {
                 ui.add(
                     egui::TextEdit::singleline(&mut self.instruction)
                         .desired_width(f32::INFINITY)
-                        .hint_text("例如：采用意译、用学术风格。仅大模型翻译生效，留空为默认风格"),
+                        .hint_text(s(
+                            "例如：采用意译、用学术风格。仅大模型翻译生效，留空为默认风格",
+                            "e.g. a style request. Only baidu-llm uses it; empty means default style",
+                        )),
                 );
             });
             ui.add_space(2.0);
@@ -409,12 +412,14 @@ impl eframe::App for App {
             card().show(ui, |ui| {
                 // 字符数给个直观读数：两家百度接口都按源字符计费
                 ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new("原文").strong());
+                    ui.label(egui::RichText::new(s("原文", "Source")).strong());
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.label(
-                            egui::RichText::new(format!("{} 字符", self.source.chars().count()))
-                                .color(META),
-                        );
+                        let n = self.source.chars().count();
+                        let txt = match i18n::ui_lang() {
+                            UiLang::Zh => format!("{n} 字符"),
+                            UiLang::En => format!("{n} chars"),
+                        };
+                        ui.label(egui::RichText::new(txt).color(META));
                     });
                 });
                 ui.add_space(4.0);
@@ -424,7 +429,10 @@ impl eframe::App for App {
                         .desired_rows(8)
                         .desired_width(f32::INFINITY)
                         .frame(false)
-                        .hint_text("输入要翻译的文本，回车翻译，Shift + 回车换行"),
+                        .hint_text(s(
+                            "输入要翻译的文本，回车翻译，Shift + 回车换行",
+                            "Text to translate. Enter translates, Shift+Enter adds a newline",
+                        )),
                 );
                 if self.focus_source {
                     source_edit.request_focus();
@@ -435,7 +443,7 @@ impl eframe::App for App {
                 ui.horizontal(|ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         let btn = egui::Button::new(
-                            egui::RichText::new("翻译").color(egui::Color32::WHITE),
+                            egui::RichText::new(s("翻译", "Translate")).color(egui::Color32::WHITE),
                         )
                         .fill(ACCENT);
                         if ui.add_enabled(!self.busy, btn).clicked() {
@@ -457,7 +465,7 @@ impl eframe::App for App {
             // 译文卡片：标题行带状态（引擎 · 语向 · 耗时）
             card().show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new("译文").strong());
+                    ui.label(egui::RichText::new(s("译文", "Translation")).strong());
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.label(egui::RichText::new(&self.status).color(META));
                     });
@@ -468,19 +476,19 @@ impl eframe::App for App {
                         .desired_rows(8)
                         .desired_width(f32::INFINITY)
                         .frame(false)
-                        .hint_text("译文会显示在这里"),
+                        .hint_text(s("译文会显示在这里", "The translation appears here")),
                 );
             });
 
             ui.add_space(4.0);
 
             ui.horizontal(|ui| {
-                if ui.button("复制译文").clicked() {
+                if ui.button(s("复制译文", "Copy translation")).clicked() {
                     self.copy_output();
                 }
                 if let Some(at) = self.copied_at {
                     if at.elapsed() < Duration::from_secs(2) {
-                        ui.label("已复制");
+                        ui.label(s("已复制", "Copied"));
                         ctx.request_repaint_after(Duration::from_millis(500));
                     } else {
                         self.copied_at = None;
@@ -499,34 +507,44 @@ impl eframe::App for App {
     }
 }
 
+/// 语种名随界面语言走
+fn name_of(l: Lang) -> &'static str {
+    match i18n::ui_lang() {
+        UiLang::Zh => l.name_zh(),
+        UiLang::En => l.name_en(),
+    }
+}
+
 fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
     // 展示文字从短：完整规则挪到悬停提示里，别把顶栏撑爆
     let text = if *sel == Lang::Auto {
         if is_from {
-            "自动检测".to_string()
+            s("自动检测", "Auto-detect").to_string()
         } else {
-            "自动".to_string()
+            s("自动", "Auto").to_string()
         }
     } else {
-        sel.name_zh().to_string()
+        name_of(*sel).to_string()
     };
     let resp = egui::ComboBox::from_id_source(format!("lang-{label}"))
         .selected_text(text)
         .show_ui(ui, |ui| {
             // 下拉展开后放完整说明，宽度不受顶栏约束
             let auto = if is_from {
-                "自动检测"
+                s("自动检测", "Auto-detect")
             } else {
-                "自动（中英互转）"
+                s("自动（中英互转）", "Auto (Chinese/English swap)")
             };
             ui.selectable_value(sel, Lang::Auto, auto);
             for l in Lang::ALL {
-                ui.selectable_value(sel, *l, l.name_zh());
+                ui.selectable_value(sel, *l, name_of(*l));
             }
         });
     if !is_from {
-        resp.response
-            .on_hover_text("目标语「自动」：中英互转；日韩俄等第三方语言翻向 default.lang（默认英文）");
+        resp.response.on_hover_text(s(
+            "目标语「自动」：中英互转；日韩俄等第三方语言翻向 default.lang（默认英文）",
+            "Auto target: Chinese and English swap; third languages follow default.lang (default English)",
+        ));
     }
 }
 

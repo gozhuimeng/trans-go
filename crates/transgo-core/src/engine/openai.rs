@@ -65,10 +65,10 @@ impl Engine for Llm {
         "llm"
     }
     fn name(&self) -> &'static str {
-        "LLM (OpenAI 兼容)"
+        crate::i18n::s("LLM (OpenAI 兼容)", "LLM (OpenAI compatible)")
     }
     fn quota(&self) -> &'static str {
-        "取决于所选服务商"
+        crate::i18n::s("取决于所选服务商", "Depends on the provider")
     }
     fn signup(&self) -> &'static str {
         "https://platform.openai.com/ (或 DeepSeek / 硅基流动 / 本地 Ollama)"

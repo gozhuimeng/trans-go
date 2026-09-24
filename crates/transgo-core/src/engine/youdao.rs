@@ -62,10 +62,10 @@ impl Engine for Youdao {
         "youdao"
     }
     fn name(&self) -> &'static str {
-        "有道智云"
+        crate::i18n::s("有道智云", "Youdao Cloud")
     }
     fn quota(&self) -> &'static str {
-        "无月度额度，仅一次性 50 元体验金"
+        crate::i18n::s("无月度额度，仅一次性 50 元体验金", "No monthly quota, one-time 50-yuan trial credit")
     }
     fn signup(&self) -> &'static str {
         "https://ai.youdao.com/"

@@ -171,10 +171,10 @@ impl Engine for Volcano {
         "volcano"
     }
     fn name(&self) -> &'static str {
-        "火山引擎机器翻译"
+        crate::i18n::s("火山引擎机器翻译", "Volcano Engine MT")
     }
     fn quota(&self) -> &'static str {
-        "每月前200万字符免费，超出49元/百万字符（会自动扣费）"
+        crate::i18n::s("每月前200万字符免费，超出49元/百万字符（会自动扣费）", "First 2 M characters/month free; beyond that 49 yuan per million (billed automatically)")
     }
     fn signup(&self) -> &'static str {
         "https://docs.volcengine.com/docs/MachineTranslation/Productbilling?lang=zh"

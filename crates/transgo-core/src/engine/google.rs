@@ -52,7 +52,7 @@ impl Engine for Google {
         "Google Cloud Translation"
     }
     fn quota(&self) -> &'static str {
-        "50万字符/月（国内要代理）"
+        crate::i18n::s("50万字符/月（国内要代理）", "500 K characters/month (proxy needed in mainland China)")
     }
     fn signup(&self) -> &'static str {
         "https://cloud.google.com/translate/docs/setup"
