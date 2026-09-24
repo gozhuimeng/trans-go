@@ -68,7 +68,7 @@ $ transgo engines --test -v
 **症状**：`transgo: 网络请求失败: ...`，退出码 `1`。
 
 国内访问 Google / Azure 可能不通：`google` 依赖 `translation.googleapis.com`，需要自备网络环境，
-国内直连友好的是 `tencent` / `volcano` / `aliyun` / `baidu` / `deepl`。
+国内直连友好的是 `tencent` / `volcano` / `aliyun` / `baidu` / `youdao` / `deepl`。
 
 超时默认 15 秒，可调：
 
@@ -221,11 +221,7 @@ transgo 的报错形如 `transgo: <引擎> 返回错误 [<错误码>]: <说明>`
 多半是 **MyMemory 的语料噪声**。它是众包翻译记忆库，译文取自其他用户提交的条目，
 偶尔会把术语表条目当译文原样返回（`hello world` → `hello world`）。
 
-根本解决办法是换个引擎：
-
-```console
-$ transgo config set deepl.api_key 你的Key
-```
+根本解决办法是换引擎，各家接口的额度、计费和申请步骤见 [docs/engines.md](engines.md)。
 
 MyMemory 的定位就是「没配任何 Key 时先能用」，配好后会被自动跳过。
 
@@ -251,9 +247,10 @@ $ transgo -f ja -t zh "日本語"    # 明确语种对
 
 按这个顺序排查：
 
-1. 是不是在用 `mymemory`？`transgo -v` 看实际用的引擎。是的话换 `deepl`
+1. 是不是在用 `mymemory`？`transgo -v` 看实际用的引擎。是的话换成其他引擎
 2. 长文本？有些引擎单次有字符上限（百度 6000、阿里云 5000），切小段试
-3. 术语不对？用 `llm` 引擎并自定义 `system_prompt` 固定术语表，见 [docs/engines.md](engines.md)
+3. 术语不对？`llm` 引擎可自定义 `system_prompt` 固定术语表，`baidu-llm` 可开术语库干预，
+   两条路都见 [docs/engines.md](engines.md)
 
 ---
 
