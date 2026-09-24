@@ -327,17 +327,13 @@ Problems not covered there are welcome as
 
 ---
 
-## Roadmap
+## Milestones
 
 - [x] **M1** CLI core + 11 official translation engines + configuration management
 - [x] **M2** GUI (`transgo gui` / `transgo gui --clip`)
       A standalone translation window wrapping the CLI's core library; no clipboard listening,
       no global hotkey listening
-- [ ] Selection translation (simulate Ctrl+C + read the clipboard; needs `wtype`)
-- [ ] Screenshot OCR translation (`grim` + `slurp` + `tesseract`)
-- [ ] Glossary / translation history
-- [ ] English documentation (`README_EN.md`, `docs_en/`)
-- [ ] Anthropic and OpenAI Response API support
+- [x] English documentation (`README_EN.md`, `docs_en/`)
 
 ---
 

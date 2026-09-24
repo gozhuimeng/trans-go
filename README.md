@@ -301,16 +301,12 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 
 ---
 
-## 路线图
+## 里程碑
 
 - [x] **M1** CLI 主体 + 11 个官方翻译引擎 + 配置管理
 - [x] **M2** GUI（`transgo gui` / `transgo gui --clip`）
       独立输入翻译窗口，封装 CLI 的核心库；不监听剪贴板、不监听全局按键
-- [ ] 划词翻译（模拟 Ctrl+C + 读剪贴板，需装 `wtype`）
-- [ ] 截图 OCR 翻译（`grim` + `slurp` + `tesseract`）
-- [ ] 生词本 / 历史记录
 - [x] 英文文档（`README_EN.md`、`docs_en/`）
-- [ ] 接入 Anthropic 与 OpenAI Response API
 
 ---
 
