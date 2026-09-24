@@ -88,6 +88,26 @@ $ transgo -a "hello"                     # 附带备选译文
 但**翻译指令含空格必须引号**：`transgo -i 采用意译 不要直译 原文` 里
 「不要直译 原文」会被当成待译文本。参数含 `$`、`!`、`*` 之类 shell 特殊字符时同理。
 
+### 命令补全（可选）
+
+想让子命令和选项能 Tab 补全、不用背参数的话，按下面装一次；不需要就跳过本节，
+transgo 本体与此无关。以 zsh 为例：
+
+```console
+$ mkdir -p ~/.zfunc && transgo completions zsh > ~/.zfunc/_transgo
+```
+
+然后在 `~/.zshrc` 里、`compinit` 之前（oh-my-zsh 用户在 `source $ZSH/oh-my-zsh.sh`
+之前）加一行，重开 shell 生效：
+
+```bash
+fpath=(~/.zfunc $fpath)
+```
+
+bash 用 `source <(transgo completions bash)`，
+fish 用 `transgo completions fish > ~/.config/fish/completions/transgo.fish`。
+升级 transgo 后重新生成一次脚本，补全才会认识新选项。
+
 完整选项：
 
 ```console
@@ -127,6 +147,7 @@ Options:
 | `transgo config get <KEY>` | 读取单项 |
 | `transgo config set <KEY> <VALUE>` | 写入单项（值传空串表示清除） |
 | `transgo config unset <KEY>` | 清除单项 |
+| `transgo completions zsh` | 生成 shell 补全脚本（bash / fish 等同理） |
 | `transgo config init` | 生成带注释的模板配置 |
 | `transgo config edit` | 用 `$EDITOR` 打开配置 |
 

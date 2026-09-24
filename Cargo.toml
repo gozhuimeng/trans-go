@@ -19,6 +19,7 @@ async-trait = "0.1"
 base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
 dirs = "6"
 eframe = "0.27"
 fontdb = "0.24"

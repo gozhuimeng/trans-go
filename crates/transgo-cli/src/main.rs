@@ -62,7 +62,9 @@ fn restore_sigpipe() {}
 /// clap 无法在一个命令里同时容纳「贪婪的位置参数」和「子命令」而不产生歧义，
 /// 所以这里在解析前把默认子命令补上。判定是纯字符串比较，行为可预测。
 fn normalize_argv() -> Vec<OsString> {
-    const VERBS: &[&str] = &["translate", "t", "tr", "engines", "config", "lang", "gui", "help"];
+    const VERBS: &[&str] = &[
+        "translate", "t", "tr", "engines", "config", "lang", "gui", "completions", "help",
+    ];
     const GLOBALS: &[&str] = &["-h", "--help", "-V", "--version"];
 
     let mut argv: Vec<OsString> = std::env::args_os().collect();
@@ -121,6 +123,13 @@ enum Cmd {
 
     /// 打开图形界面翻译窗口
     Gui(GuiArgs),
+
+    /// 生成 shell 补全脚本（zsh / bash / fish / elvish / powershell）
+    Completions {
+        /// 目标 shell
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 #[derive(Args)]
@@ -229,6 +238,11 @@ async fn run(cli: Cli) -> Result<(), Error> {
         Cmd::Config { action } => cmd_config(action),
         Cmd::Lang(a) => cmd_lang(a),
         Cmd::Gui(a) => transgo_gui::run(a.clip).map_err(Error::Other),
+        Cmd::Completions { shell } => {
+            let mut cmd = <Cli as clap::CommandFactory>::command();
+            clap_complete::generate(shell, &mut cmd, "transgo", &mut std::io::stdout());
+            Ok(())
+        }
     }
 }
 
@@ -638,5 +652,11 @@ mod tests {
         let cli = Cli::try_parse_from(["transgo", "translate", "-"]).unwrap();
         let Cmd::Translate(a) = cli.cmd else { panic!("应解析成 translate") };
         assert_eq!(a.text, vec!["-".to_string()]);
+    }
+
+    #[test]
+    fn completions_takes_shell_arg() {
+        let cli = Cli::try_parse_from(["transgo", "completions", "zsh"]).unwrap();
+        assert!(matches!(cli.cmd, Cmd::Completions { .. }));
     }
 }
