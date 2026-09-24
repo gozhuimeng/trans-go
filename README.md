@@ -2,7 +2,7 @@
 
 轻量快速的翻译工具，CLI 优先，Wayland / Hyprland 友好。
 
-只接提供商官方翻译接口，不使用任何逆向网页版的反代。
+只接提供商官方翻译接口，不使用任何逆向网页版的反代。英文版：[README_EN.md](README_EN.md)。
 
 ```console
 $ transgo "知识就是力量"

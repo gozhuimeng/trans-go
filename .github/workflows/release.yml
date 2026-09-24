@@ -137,6 +137,14 @@ jobs:
             echo "- [Hyprland / Wayland 桌面集成]($repo/blob/$tag/docs/hyprland.md)：快捷键绑定、实用脚本"
             echo "- [常见问题与故障排查]($repo/blob/$tag/docs/troubleshooting.md)：报错信息对照"
             echo "- [实现说明]($repo/blob/$tag/docs/architecture.md)：给改代码或加引擎的人"
+            echo
+            echo "Docs (English):"
+            echo
+            echo "- [README]($repo/blob/$tag/README_EN.md): features, install, usage, configuration"
+            echo "- [Translation engines]($repo/blob/$tag/docs_en/engines.md): API keys, quotas, what to watch out for"
+            echo "- [Hyprland / Wayland integration]($repo/blob/$tag/docs_en/hyprland.md): key bindings, scripts"
+            echo "- [Troubleshooting]($repo/blob/$tag/docs_en/troubleshooting.md): error reference"
+            echo "- [Implementation notes]($repo/blob/$tag/docs_en/architecture.md): for contributors"
           } >> "$notes"
 
           # 重复跑同一个 tag 时只覆盖产物，不重建 Release，保留原有的评论和下载计数

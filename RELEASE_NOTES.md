@@ -1,14 +1,15 @@
 <!--
   这份文件是 GitHub Release 正文的发版说明部分，由 .github/workflows/release.yml 读取。
-  文末的「文档」章节是 workflow 自动拼上去的（链接要指向具体 tag，不能写死在这里），
-  所以这里只写发版说明本身。
+  文末的「文档」章节是 workflow 自动拼上去的（链接要指向具体 tag，不能写死在这里，
+  含中英文两个链接块），所以这里只写发版说明本身。
 
   注意正文格式：
      - **不要以 `# transgo x.y.z` 开头**。Release 页面的标题已经是版本号了，再写一遍是重复。
      - **不要写概括性的开场白**。读者点进 Release 就是来看改动细节的，直接从 `## 新增` 开始。
+     - **双语**：中文在前，用 `---` 分隔后重复一遍英文版（英文部分的文件链接指向英文文档）。
 
   发版流程：
-    1. 重写本文件，写清这次的新增功能和改动
+    1. 重写本文件，写清这次的新增功能和改动（中英双语）
     2. git commit
     3. git tag v<版本号>        （要以 v 开头，例如 v0.1.0）
     4. git push --follow-tags
@@ -30,3 +31,20 @@
   提示，窗口最小宽度从 420 降到 330，能缩得更窄
 - 翻译按钮移到原文卡片右下角，贴着内容顺手
 - 窗口默认尺寸调整为 457 × 737
+
+---
+
+## Added
+
+- Redesigned GUI: a card-based layout of white rounded cards with soft shadows on a light
+  gray canvas, with accent-colored outlines on hover and focus
+- Configurable font size: `gui.font_scale` (0.5 ~ 3.0, env `TRANSGO_GUI_FONT_SCALE`).
+  Turn it down on a laptop screen, up on an external monitor
+
+## Improved
+
+- Slimmer top bar: only the engine and language dropdowns remain, and they wrap when narrow;
+  the full rule for the "auto" target language moved to a hover tip; minimum window width
+  dropped from 420 to 330
+- The translate button moved to the bottom-right of the source card, next to the content
+- Default window size is now 457 × 737
