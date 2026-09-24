@@ -320,7 +320,8 @@ $ transgo config set llm.api_key 你的Key
 **坑**
 
 `base_url` 要带 `/v1`，报 `404` 通常就是漏了这一段；`model` 名称写错同样会 `404`。
-走本地 Ollama 时 transgo 会自动免掉 Key 校验（识别 `localhost` / `127.0.0.1`）。
+本地 Ollama、局域网自建服务（私有网段 IP）transgo 会自动免掉 Key 校验，
+公网服务商则必须填 `api_key`。
 
 **进阶：自定义系统提示词**
 

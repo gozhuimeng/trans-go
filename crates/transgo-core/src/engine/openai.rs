@@ -74,8 +74,8 @@ impl Engine for Llm {
         "https://platform.openai.com/ (或 DeepSeek / 硅基流动 / 本地 Ollama)"
     }
     fn configured(&self) -> bool {
-        // 本地 Ollama 这类不需要 Key
-        !self.model.is_empty() && (!self.api_key.is_empty() || self.base_url.contains("localhost") || self.base_url.contains("127.0.0.1"))
+        // 本地与内网自建服务不需要 Key（Ollama、vLLM、局域网翻译模型）
+        !self.model.is_empty() && (!self.api_key.is_empty() || is_keyless_host(&self.base_url))
     }
     fn languages(&self) -> Option<&'static [Lang]> {
         None // 没有语种限制
@@ -142,9 +142,46 @@ impl Engine for Llm {
     }
 }
 
-/// 去掉模型偶尔加的外层引号，但保留文本内部的引号
+/// 本地与内网自建的 OpenAI 兼容服务一般不要 Key：localhost、回环、私有网段。
+/// 公网地址一律要求 Key（那些服务都是租的，没 Key 不可信）。
+fn is_keyless_host(base_url: &str) -> bool {
+    let Ok(url) = reqwest::Url::parse(base_url) else {
+        return false;
+    };
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let host = host.trim_start_matches('[').trim_end_matches(']');
+    if host.eq_ignore_ascii_case("localhost") {
+        return true;
+    }
+    match host.parse::<std::net::IpAddr>() {
+        Ok(std::net::IpAddr::V4(v4)) => {
+            v4.is_loopback()
+                || v4.octets()[0] == 10
+                || (v4.octets()[0] == 172 && (16..=31).contains(&v4.octets()[1]))
+                || (v4.octets()[0] == 192 && v4.octets()[1] == 168)
+        }
+        Ok(std::net::IpAddr::V6(v6)) => v6.is_loopback(),
+        Err(_) => false,
+    }
+}
+
+/// 清掉模型的加戏：开头回显的分隔线、外层引号（文本内部的引号保留）
 fn strip_wrapping_quotes(s: &str) -> String {
-    let t = s.trim();
+    let mut t = s.trim();
+    // 小模型偶尔把提示词里的分隔线原样吐回来。只剥开头第一行，
+    // 且后面得真有内容；整段就一个 --- 时不动它
+    if let Some(rest) = t.strip_prefix("---") {
+        let after_break = rest
+            .strip_prefix('\n')
+            .or_else(|| rest.strip_prefix("\r\n"));
+        if let Some(content) = after_break {
+            if !content.trim().is_empty() {
+                t = content.trim_start();
+            }
+        }
+    }
     for (o, c) in [('"', '"'), ('「', '」'), ('『', '』')] {
         if t.len() >= 2 && t.starts_with(o) && t.ends_with(c) {
             let inner = &t[o.len_utf8()..t.len() - c.len_utf8()];
@@ -158,12 +195,37 @@ fn strip_wrapping_quotes(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::strip_wrapping_quotes;
+    use super::{is_keyless_host, strip_wrapping_quotes};
 
     #[test]
     fn strips_outer_quotes_only() {
         assert_eq!(strip_wrapping_quotes("\"你好\""), "你好");
         assert_eq!(strip_wrapping_quotes("他说\"你好\""), "他说\"你好\"");
         assert_eq!(strip_wrapping_quotes("「注釈」"), "注釈");
+    }
+
+    #[test]
+    fn strips_echoed_separator() {
+        assert_eq!(strip_wrapping_quotes("---\n早起的鸟能抓到虫"), "早起的鸟能抓到虫");
+        assert_eq!(strip_wrapping_quotes("---\r\n你好"), "你好");
+        // 正文里的分隔线不动，单独一行的 --- 也不当回显
+        assert_eq!(strip_wrapping_quotes("---"), "---");
+        assert_eq!(strip_wrapping_quotes("第一行\n---\n第二行"), "第一行\n---\n第二行");
+    }
+
+    #[test]
+    fn keyless_covers_local_and_lan_only() {
+        // 本地回环与常见自建服务
+        assert!(is_keyless_host("http://localhost:11434/v1"));
+        assert!(is_keyless_host("http://127.0.0.1:8080/v1"));
+        assert!(is_keyless_host("http://[::1]:8080/v1"));
+        // 内网自建服务（局域网翻译模型就在这类地址上）
+        assert!(is_keyless_host("http://10.0.0.144:8080/v1"));
+        assert!(is_keyless_host("http://192.168.1.5:8000/v1"));
+        assert!(is_keyless_host("http://172.16.0.1:8000/v1"));
+        // 公网服务必须有 Key
+        assert!(!is_keyless_host("https://api.openai.com/v1"));
+        assert!(!is_keyless_host("http://172.32.0.1:8000/v1"));
+        assert!(!is_keyless_host("不是 URL"));
     }
 }

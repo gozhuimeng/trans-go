@@ -214,6 +214,13 @@ CLI 工具必须在 `main` 开头恢复 `SIG_DFL`。Unix 管道的语义就是�
 （parse json body error: readUint64），超过 int64 上限也报 `53001`（ReadInt64: overflow）。
 签名拼接时用它的十进制形式，与通用翻译一致。`baidu_llm.rs` 里取 UUID 低 63 位即为此故。
 
+### LLM 提示词里的语种必须用英文全名
+
+`name_en()` 早期用 `stringify!` 输出枚举标识符（`Zh`、`Ja`），大厂 chat 模型能脑补，
+小模型不行：实测 1.8B 级翻译模型收到 `target language: Zh` 会把目标语漂到印地语、
+土耳其语等随机语种，显式指定也没用；换成 `Simplified Chinese` 全名后立刻稳定。
+同一档模型还会偶尔回显提示词里的分隔线 `---`，`openai.rs` 的输出清理会剥掉。
+
 ### 各家的错误码类型不稳定
 
 - 百度 `error_code` 在示例里是字符串、在参数表里是整数

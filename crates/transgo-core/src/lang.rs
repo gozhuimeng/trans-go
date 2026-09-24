@@ -6,7 +6,7 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 macro_rules! langs {
-    ($($v:ident => { code: $code:literal, zh: $zh:literal }),+ $(,)?) => {
+    ($($v:ident => { code: $code:literal, zh: $zh:literal, en: $en:literal }),+ $(,)?) => {
         /// 语种。`Auto` 仅用于请求侧的「自动检测」。
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum Lang {
@@ -35,11 +35,12 @@ macro_rules! langs {
                 }
             }
 
-            /// 英文名，用于写进 LLM 提示词
+            /// 英文名，用于写进 LLM 提示词。必须用完整名称而不是短代码：
+            /// 小模型对「Zh」这类代码的语言服从度不稳定，实测会漂到随机语种
             pub const fn name_en(self) -> &'static str {
                 match self {
                     Lang::Auto => "auto-detect",
-                    $(Lang::$v => stringify!($v)),+
+                    $(Lang::$v => $en),+
                 }
             }
         }
@@ -47,35 +48,35 @@ macro_rules! langs {
 }
 
 langs! {
-    Zh   => { code: "zh",    zh: "简体中文" },
-    ZhTw => { code: "zh-TW", zh: "繁体中文" },
-    En   => { code: "en",    zh: "英语" },
-    Ja   => { code: "ja",    zh: "日语" },
-    Ko   => { code: "ko",    zh: "韩语" },
-    Fr   => { code: "fr",    zh: "法语" },
-    De   => { code: "de",    zh: "德语" },
-    Es   => { code: "es",    zh: "西班牙语" },
-    Pt   => { code: "pt",    zh: "葡萄牙语" },
-    It   => { code: "it",    zh: "意大利语" },
-    Ru   => { code: "ru",    zh: "俄语" },
-    Ar   => { code: "ar",    zh: "阿拉伯语" },
-    Th   => { code: "th",    zh: "泰语" },
-    Vi   => { code: "vi",    zh: "越南语" },
-    Id   => { code: "id",    zh: "印尼语" },
-    Ms   => { code: "ms",    zh: "马来语" },
-    Tr   => { code: "tr",    zh: "土耳其语" },
-    Hi   => { code: "hi",    zh: "印地语" },
-    Nl   => { code: "nl",    zh: "荷兰语" },
-    Pl   => { code: "pl",    zh: "波兰语" },
-    Sv   => { code: "sv",    zh: "瑞典语" },
-    Da   => { code: "da",    zh: "丹麦语" },
-    Fi   => { code: "fi",    zh: "芬兰语" },
-    El   => { code: "el",    zh: "希腊语" },
-    Cs   => { code: "cs",    zh: "捷克语" },
-    Ro   => { code: "ro",    zh: "罗马尼亚语" },
-    Uk   => { code: "uk",    zh: "乌克兰语" },
-    Fa   => { code: "fa",    zh: "波斯语" },
-    He   => { code: "he",    zh: "希伯来语" },
+    Zh   => { code: "zh",    zh: "简体中文",   en: "Simplified Chinese" },
+    ZhTw => { code: "zh-TW", zh: "繁体中文",   en: "Traditional Chinese" },
+    En   => { code: "en",    zh: "英语",       en: "English" },
+    Ja   => { code: "ja",    zh: "日语",       en: "Japanese" },
+    Ko   => { code: "ko",    zh: "韩语",       en: "Korean" },
+    Fr   => { code: "fr",    zh: "法语",       en: "French" },
+    De   => { code: "de",    zh: "德语",       en: "German" },
+    Es   => { code: "es",    zh: "西班牙语",   en: "Spanish" },
+    Pt   => { code: "pt",    zh: "葡萄牙语",   en: "Portuguese" },
+    It   => { code: "it",    zh: "意大利语",   en: "Italian" },
+    Ru   => { code: "ru",    zh: "俄语",       en: "Russian" },
+    Ar   => { code: "ar",    zh: "阿拉伯语",   en: "Arabic" },
+    Th   => { code: "th",    zh: "泰语",       en: "Thai" },
+    Vi   => { code: "vi",    zh: "越南语",     en: "Vietnamese" },
+    Id   => { code: "id",    zh: "印尼语",     en: "Indonesian" },
+    Ms   => { code: "ms",    zh: "马来语",     en: "Malay" },
+    Tr   => { code: "tr",    zh: "土耳其语",   en: "Turkish" },
+    Hi   => { code: "hi",    zh: "印地语",     en: "Hindi" },
+    Nl   => { code: "nl",    zh: "荷兰语",     en: "Dutch" },
+    Pl   => { code: "pl",    zh: "波兰语",     en: "Polish" },
+    Sv   => { code: "sv",    zh: "瑞典语",     en: "Swedish" },
+    Da   => { code: "da",    zh: "丹麦语",     en: "Danish" },
+    Fi   => { code: "fi",    zh: "芬兰语",     en: "Finnish" },
+    El   => { code: "el",    zh: "希腊语",     en: "Greek" },
+    Cs   => { code: "cs",    zh: "捷克语",     en: "Czech" },
+    Ro   => { code: "ro",    zh: "罗马尼亚语", en: "Romanian" },
+    Uk   => { code: "uk",    zh: "乌克兰语",   en: "Ukrainian" },
+    Fa   => { code: "fa",    zh: "波斯语",     en: "Persian" },
+    He   => { code: "he",    zh: "希伯来语",   en: "Hebrew" },
 }
 
 impl Lang {
