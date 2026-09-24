@@ -120,25 +120,25 @@ For bash use `source <(transgo completions bash)`; for fish use
 `transgo completions fish > ~/.config/fish/completions/transgo.fish`.
 Regenerate the script after upgrading transgo so completion knows about new options.
 
-Full options (output is currently in Chinese):
+Full options:
 
 ```console
 $ transgo translate --help
-翻译文本（默认命令，可省略）
+Translate text (default command; can be omitted)
 
 Usage: transgo translate [OPTIONS] [TEXT]...
 
 Arguments:
-  [TEXT]...  要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
+  [TEXT]...  Text to translate; omit or pass - to read stdin. Put text starting with - after --
 
 Options:
-  -t, --to <LANG>           目标语种，如 zh / en / ja；auto = 中英互译，第三方语言看 default.lang
-  -f, --from <LANG>         源语种，不填就自动检测
-  -e, --engine <ID>         翻译引擎，不填则取第一个已配置的
-  -i, --instruction <TEXT>  翻译指令，控制文风（仅 baidu-llm 生效），如「采用意译」
-  -j, --json                用 JSON 输出完整结果
-  -a, --alternatives        备选译文打到 stderr，stdout 保持干净好接管道
-  -v, --verbose             在 stderr 附上引擎、语种和耗时
+  -t, --to <LANG>           Target language, e.g. zh / en / ja. auto = Chinese/English swap; third languages follow default.lang
+  -f, --from <LANG>         Source language; auto-detected when omitted
+  -e, --engine <ID>         Translation engine; defaults to the first configured one
+  -i, --instruction <TEXT>  Translation instruction controlling style (baidu-llm only), e.g. "采用意译"
+  -j, --json                Output the full result as JSON
+  -a, --alternatives        Send alternative translations to stderr; stdout stays clean for pipes
+  -v, --verbose             Add engine, languages and timing to stderr
   -h, --help                Print help
   -V, --version             Print version
 ```

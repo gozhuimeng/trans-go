@@ -17,16 +17,26 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Instant;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, CommandFactory, FromArgMatches, Parser, Subcommand};
 
 use transgo_core::config::config_path;
 use transgo_core::engine::{self, Engine};
+use transgo_core::i18n::{self, s, UiLang};
 use transgo_core::{Config, Error, Lang, Request};
 
 #[tokio::main]
 async fn main() -> ExitCode {
     restore_sigpipe();
-    let cli = Cli::parse_from(normalize_argv());
+    // 界面语言必须在解析之前定好：--help 和解析报错都要按它出文案
+    if let Err(e) = init_ui_lang() {
+        eprintln!("transgo: {e}");
+        return ExitCode::from(2);
+    }
+    let matches = localize_cmd(<Cli as CommandFactory>::command()).get_matches_from(normalize_argv());
+    let cli = match <Cli as FromArgMatches>::from_arg_matches(&matches) {
+        Ok(cli) => cli,
+        Err(e) => e.exit(),
+    };
     match run(cli).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
@@ -34,6 +44,15 @@ async fn main() -> ExitCode {
             ExitCode::from(e.exit_code().clamp(0, 255) as u8)
         }
     }
+}
+
+/// 读取 `ui.lang` 并设定全局界面语言。取值非法时如实报错退出。
+fn init_ui_lang() -> Result<(), String> {
+    let cfg = Config::load().map_err(|e| e.to_string())?;
+    let lang = i18n::ui_lang_from(cfg.ui.lang.as_deref())
+        .map_err(|bad| format!("ui.lang 只支持 zh 或 en，当前是「{bad}」"))?;
+    i18n::set_ui_lang(lang);
+    Ok(())
 }
 
 /// 把 SIGPIPE 恢复成默认行为。
@@ -88,6 +107,118 @@ stdout 只有译文本身，元信息一律走 stderr，可以直接进管道。
   transgo gui --clip              打开窗口翻译剪贴板内容
 
 语种代码见 transgo lang，翻译引擎见 transgo engines。"#;
+
+const LONG_ABOUT_EN: &str = r#"A lightweight, fast translation tool. CLI first, Wayland / Hyprland friendly.
+
+stdout carries the translation only; metadata goes to stderr, so it pipes cleanly.
+
+Examples:
+  transgo "知识就是力量"          auto direction between Chinese and English
+  echo "good morning" | transgo   read from stdin
+  transgo -t ja "你好"            pick the target language
+  transgo -e deepl "hello"        pick the engine
+  transgo --json "hello"          full result, script friendly
+  transgo gui --clip              open the GUI pre-filled from the clipboard
+
+Language codes: transgo lang. Engines: transgo engines."#;
+
+/// 中文帮助文案 → 英文。命中不了的原样保留（clap 自带脚手架本来就是英文）。
+fn help_en(zh: &str) -> Option<&'static str> {
+    if zh == LONG_ABOUT {
+        return Some(LONG_ABOUT_EN);
+    }
+    Some(match zh {
+        // 短 about（-h 用）与子命令
+        "轻量快速的翻译工具，CLI 优先，Wayland / Hyprland 友好" => {
+            "A lightweight, fast translation tool. CLI first, Wayland / Hyprland friendly"
+        }
+        "翻译文本（默认命令，可省略）" => "Translate text (default command; can be omitted)",
+        "列出翻译引擎、免费额度和配置状态" => "List engines, free quotas and configuration status",
+        "管理配置（API Key、默认引擎等）" => "Manage configuration (API keys, default engine, …)",
+        "列出支持的语种" => "List supported languages",
+        "打开图形界面翻译窗口" => "Open the GUI translation window",
+        "生成 shell 补全脚本（zsh / bash / fish / elvish / powershell）" => {
+            "Generate a shell completion script (zsh / bash / fish / elvish / powershell)"
+        }
+        // translate 参数
+        "要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后" => {
+            "Text to translate; omit or pass - to read stdin. Put text starting with - after --"
+        }
+        "目标语种，如 zh / en / ja；auto = 中英互译，第三方语言看 default.lang" => {
+            "Target language, e.g. zh / en / ja. auto = Chinese/English swap; third languages follow default.lang"
+        }
+        "源语种，不填就自动检测" => "Source language; auto-detected when omitted",
+        "翻译引擎，不填则取第一个已配置的" => "Translation engine; defaults to the first configured one",
+        "翻译指令，控制文风（仅 baidu-llm 生效），如「采用意译」" => {
+            "Translation instruction controlling style (baidu-llm only), e.g. \"采用意译\""
+        }
+        "用 JSON 输出完整结果" => "Output the full result as JSON",
+        "备选译文打到 stderr，stdout 保持干净好接管道" => {
+            "Send alternative translations to stderr; stdout stays clean for pipes"
+        }
+        "在 stderr 附上引擎、语种和耗时" => "Add engine, languages and timing to stderr",
+        // engines / lang 参数
+        "对每个已配置的引擎实发一次请求，验证 Key 能用" => {
+            "Send one real request per configured engine to verify the keys"
+        }
+        "附上申请地址和语种范围" => "Also show signup URLs and language ranges",
+        "只列出某个引擎支持的语种" => "Show the language range of one engine",
+        // gui / completions 参数
+        "启动时读一次剪贴板，预填源文本并直接翻一次" => {
+            "Read the clipboard once at start, pre-fill and translate immediately"
+        }
+        "目标 shell" => "Target shell",
+        // config 子命令
+        "显示配置文件路径" => "Print the config file path",
+        "列出全部配置项" => "List every config key",
+        "读取单项" => "Read one key",
+        "写入单项，值传空串表示清除" => "Write one key (empty value clears it)",
+        "清除单项" => "Clear one key",
+        "生成带注释的模板配置" => "Generate a commented config template",
+        "用 $EDITOR 打开配置文件" => "Open the config file in $EDITOR",
+        "点分路径，例如 deepl.api_key 或 default.engine" => {
+            "Dotted path, e.g. deepl.api_key or default.engine"
+        }
+        "要写入的值。数字和布尔直接写原样（如 15、true），传空串表示清除" => {
+            "Value to write (numbers and booleans as-is, e.g. 15, true); empty string clears it"
+        }
+        _ => return None,
+    })
+}
+
+/// 按界面语言把 clap 生成的帮助文案换掉。
+/// 英文 README 的帮助块与英文输出逐字节对应，中文 README 同理。
+fn localize_cmd(mut cmd: clap::Command) -> clap::Command {
+    if i18n::ui_lang() != UiLang::En {
+        return cmd;
+    }
+    if let Some(zh) = cmd.get_about().map(|x| x.to_string()) {
+        if let Some(en) = help_en(&zh) {
+            cmd = cmd.about(en);
+        }
+    }
+    if let Some(zh) = cmd.get_long_about().map(|x| x.to_string()) {
+        if let Some(en) = help_en(&zh) {
+            cmd = cmd.long_about(en);
+        }
+    }
+    let arg_ids: Vec<_> = cmd.get_arguments().map(|a| a.get_id().clone()).collect();
+    for id in arg_ids {
+        cmd = cmd.mut_arg(id, |mut a| {
+            if let Some(zh) = a.get_help().map(|x| x.to_string()) {
+                if let Some(en) = help_en(&zh) {
+                    a = a.help(en);
+                }
+            }
+            a
+        });
+    }
+    let sub_names: Vec<_> = cmd.get_subcommands().map(|s| s.get_name().to_string()).collect();
+    for name in sub_names {
+        cmd = cmd.mut_subcommand(name, localize_cmd);
+    }
+    cmd
+}
 
 #[derive(Parser)]
 #[command(
@@ -258,7 +389,11 @@ async fn cmd_translate(a: TranslateArgs) -> Result<(), Error> {
     let text = raw.trim_end_matches(['\n', '\r']);
     if text.trim().is_empty() {
         return Err(Error::Usage(
-            "没有要翻译的文本。用法: transgo \"hello\"，或 echo hello | transgo".into(),
+            s(
+                "没有要翻译的文本。用法: transgo \"hello\"，或 echo hello | transgo",
+                "No text to translate. Usage: transgo \"hello\", or echo hello | transgo",
+            )
+            .to_string(),
         ));
     }
 
@@ -324,7 +459,11 @@ async fn cmd_translate(a: TranslateArgs) -> Result<(), Error> {
 fn read_stdin() -> Result<String, Error> {
     if std::io::stdin().is_terminal() {
         return Err(Error::Usage(
-            "没有要翻译的文本。用法: transgo \"hello\"，或 echo hello | transgo".into(),
+            s(
+                "没有要翻译的文本。用法: transgo \"hello\"，或 echo hello | transgo",
+                "No text to translate. Usage: transgo \"hello\", or echo hello | transgo",
+            )
+            .to_string(),
         ));
     }
     let mut buf = String::new();
@@ -455,7 +594,7 @@ fn cmd_config(action: ConfigCmd) -> Result<(), Error> {
             if let Some(dir) = path.parent() {
                 std::fs::create_dir_all(dir)?;
             }
-            std::fs::write(&path, TEMPLATE)?;
+            std::fs::write(&path, template())?;
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -482,7 +621,7 @@ fn cmd_config(action: ConfigCmd) -> Result<(), Error> {
     Ok(())
 }
 
-const TEMPLATE: &str = r#"# transgo 配置文件
+const TEMPLATE_ZH: &str = r#"# transgo 配置文件
 # 改单项可用 transgo config set <key> <value>，比手改文件稳。所有键都能用环境变量
 # TRANSGO_* 覆盖，例如 TRANSGO_DEEPL_API_KEY，环境变量优先于本文件。
 
@@ -497,6 +636,10 @@ from = "auto"
 # lang = "en"
 # 请求超时（秒）
 timeout_secs = 15
+
+# ---- 界面语言（CLI 与 GUI 共用）----
+[ui]
+# lang = "zh"    # zh 或 en，默认 zh
 
 # ---- 图形界面 ----
 [gui]
@@ -570,6 +713,112 @@ model = "gpt-4o-mini"
 # system_prompt = ""   # 覆盖默认翻译提示词，可用来固定术语表或语气
 
 # ---- MyMemory：免注册，留邮箱可把额度提到 5 万字符/天 ----
+[mymemory]
+email = ""
+"#;
+
+/// 配置模板按界面语言出中/英文
+fn template() -> &'static str {
+    match i18n::ui_lang() {
+        UiLang::Zh => TEMPLATE_ZH,
+        UiLang::En => TEMPLATE_EN,
+    }
+}
+
+const TEMPLATE_EN: &str = r#"# transgo config file
+# Use transgo config set <key> <value> for single changes — safer than editing by hand.
+# Every key can be overridden by a TRANSGO_* environment variable
+# (e.g. TRANSGO_DEEPL_API_KEY), which takes precedence over this file.
+
+[default]
+# Default engine id (see transgo engines). Leave empty to take the first configured one by priority.
+engine = ""
+# Target language. auto = Chinese/English swap; third languages follow lang below
+to = "auto"
+# Source language. auto = auto-detect
+from = "auto"
+# Third languages (ja/ko/ru/ar and other non-Latin scripts) translate to zh or en, default en.
+# Chinese and English always swap and are unaffected
+# lang = "en"
+# Request timeout in seconds
+timeout_secs = 15
+
+# ---- Interface language (shared by CLI and GUI) ----
+[ui]
+# lang = "zh"    # zh or en, default zh
+
+# ---- GUI ----
+[gui]
+# Font scale (0.5 ~ 3.0). Turn it down on a laptop screen, up on an external monitor
+# font_scale = 1.0
+
+# ---- DeepL: 500 K characters/month free. Signup needs a credit card DeepL supports; cards issued in mainland China are not accepted ----
+# https://www.deepl.com/pro-api — register to get a key; free keys end in :fx
+[deepl]
+api_key = ""
+
+# ---- Tencent Cloud TMT: 5 M characters/month. Every API is retired 2027-10-01 ----
+# https://cloud.tencent.com/document/product/551/40566
+[tencent]
+secret_id = ""
+secret_key = ""
+# region = "ap-guangzhou"
+
+# ---- Volcano Engine MT: first 2 M characters/month free; beyond that 49 yuan per million, billed automatically ----
+# https://console.volcengine.com/ai/region:ai+cn-north-1/translate
+[volcano]
+access_key_id = ""
+secret_access_key = ""
+# region = "cn-north-1"
+
+# ---- Alibaba Cloud MT (General): 1 M characters/month. Switches to postpaid automatically beyond the quota and cannot be turned off ----
+# https://help.aliyun.com/zh/machine-translation/
+[aliyun]
+access_key_id = ""
+access_key_secret = ""
+
+# ---- Baidu Translate: one APP ID + secret feeds both APIs ----
+# baidu uses the General Translation API (machine translation): Standard 50 K characters/month, Advanced 1 M/month after identity verification
+# baidu-llm uses the LLM Text Translation API: one-time 1 M-character test quota after identity verification, no monthly reset
+# Both cost 49 yuan per million characters beyond the quota, settled the next day; service stops when the balance runs out, no auto top-up
+# https://fanyi-api.baidu.com/
+[baidu]
+app_id = ""
+secret = ""
+# Optional: Bearer API key auth (created on the console's "API Key" page). baidu-llm then skips signing
+# api_key = ""
+# Optional: translation instruction (baidu-llm only), e.g. "采用意译", controlling the default style; --instruction overrides per call
+# reference = ""
+# Optional: glossary intervention (baidu-llm only). The glossary lives on the console's "My Glossary" page; the feature is free
+# need_intervene = false
+
+# ---- Azure AI Translator: 2 M characters/month (card required) ----
+# https://azure.microsoft.com/zh-cn/products/ai-services/ai-translator
+[azure]
+api_key = ""
+# Required for multi-service / regional resources
+# region = "eastasia"
+
+# ---- Google Cloud Translation: 500 K characters/month (proxy needed in mainland China, billing required) ----
+# https://cloud.google.com/translate/docs/setup
+[google]
+api_key = ""
+
+# ---- Youdao Cloud: no monthly quota, one-time 50-yuan trial credit. Balance-based, stops when used up ----
+# https://ai.youdao.com/
+[youdao]
+app_key = ""
+app_secret = ""
+
+# ---- Any OpenAI-compatible API: OpenAI / DeepSeek / SiliconFlow / local Ollama ----
+[llm]
+api_key = ""
+base_url = "https://api.openai.com/v1"
+model = "gpt-4o-mini"
+# temperature = 0.2
+# system_prompt = ""   # overrides the default translation prompt — handy for glossaries or tone
+
+# ---- MyMemory: registration-free; an email raises the quota to 50 K characters/day ----
 [mymemory]
 email = ""
 "#;
