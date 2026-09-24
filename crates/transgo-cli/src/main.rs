@@ -487,6 +487,11 @@ from = "auto"
 # 请求超时（秒）
 timeout_secs = 15
 
+# ---- 图形界面 ----
+[gui]
+# 字体缩放系数（0.5 ~ 3.0）。高分屏嫌字大、外接屏嫌字小时调
+# font_scale = 1.0
+
 # ---- DeepL：免费 50 万字符/月。开通要境外发行的信用卡，国内的不认 ----
 # https://www.deepl.com/pro-api 注册即可拿 Key，免费 Key 以 :fx 结尾
 [deepl]

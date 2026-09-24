@@ -125,8 +125,16 @@ pub struct LlmCfg {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
+pub struct GuiCfg {
+    /// 字体缩放系数（0.5 ~ 3.0）。高分屏嫌字大、外接屏嫌字小的时候调它
+    pub font_scale: Option<f64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Config {
     pub default: Defaults,
+    pub gui: GuiCfg,
     pub mymemory: MyMemoryCfg,
     pub deepl: DeepLCfg,
     pub google: KeyCfg,
@@ -192,6 +200,11 @@ impl Config {
         overlay!(self.default.engine, "TRANSGO_ENGINE");
         overlay!(self.default.to, "TRANSGO_TO");
         overlay!(self.default.from, "TRANSGO_FROM");
+        if let Ok(v) = std::env::var("TRANSGO_GUI_FONT_SCALE") {
+            if let Ok(n) = v.trim().parse::<f64>() {
+                self.gui.font_scale = Some(n);
+            }
+        }
         overlay!(self.mymemory.email, "TRANSGO_MYMEMORY_EMAIL");
         overlay!(self.deepl.api_key, "TRANSGO_DEEPL_API_KEY");
         overlay!(self.deepl.plan, "TRANSGO_DEEPL_PLAN");
@@ -383,6 +396,14 @@ mod tests {
         assert_eq!(c.get("default.timeout_secs").unwrap().as_deref(), Some("15"));
         // 进不了数值字段的仍如实报错
         assert!(c.set("default.timeout_secs", "abc").is_err());
+    }
+
+    #[test]
+    fn gui_font_scale_roundtrip() {
+        let mut c = Config::default();
+        c.set("gui.font_scale", "0.85").unwrap();
+        assert_eq!(c.get("gui.font_scale").unwrap().as_deref(), Some("0.85"));
+        assert!(c.set("gui.font_scale", "abc").is_err());
     }
 
     #[test]
