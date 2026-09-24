@@ -180,8 +180,8 @@ The default is `--to auto`, with three rules:
 | Everything else (Japanese, Korean, Russian, Arabic, …) | whatever `default.lang` says (default English) |
 
 Chinese and English always swap into each other. Latin-script languages are not told apart —
-characters cannot separate English from French from German, so they are treated as one block
-in the English direction. Non-Latin scripts follow `default.lang` (`zh` / `en`, default `en`).
+they are treated as one block in the English direction. Non-Latin scripts follow
+`default.lang` (`zh` / `en`, default `en`).
 
 The decision looks at the character mix of the whole text (Chinese characters at 1/3 or more
 of letter-type characters), not the first character, so Chinese text starting with an English
