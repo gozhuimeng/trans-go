@@ -4,6 +4,14 @@ transgo 只接提供商官方接口。本文档告诉你每个引擎的 Key 去�
 
 全部免费额度核实于 2026-09。**申请页面会改版，若步骤对不上以官网为准。**
 
+## 实测状态
+
+`baidu`、`baidu-llm`、`llm`、`mymemory` 用真实请求实测过双向翻译；
+`deepl`、`tencent`、`volcano`、`aliyun`、`azure`、`google`、`youdao` 未实测。
+
+用的时候遇到问题，欢迎提 [Issues](https://github.com/gozhuimeng/trans-go/issues)；
+定位到原因的，更欢迎直接提 [PR](https://github.com/gozhuimeng/trans-go/pulls)。
+
 ---
 
 ## 各家一览

@@ -285,6 +285,9 @@ $ transgo engines --test          # 先跑这个，逐个验证 Key 是否可用
 
 报错信息对照、配置不生效排查，见 [docs/troubleshooting.md](docs/troubleshooting.md)。
 
+没覆盖到的问题欢迎提 [Issues](https://github.com/gozhuimeng/trans-go/issues)，
+能顺手修的更欢迎直接提 [PR](https://github.com/gozhuimeng/trans-go/pulls)。
+
 ---
 
 ## 路线图
