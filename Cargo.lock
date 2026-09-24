@@ -4067,7 +4067,7 @@ dependencies = [
 
 [[package]]
 name = "transgo-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "clap",
  "clap_complete",
@@ -4079,7 +4079,7 @@ dependencies = [
 
 [[package]]
 name = "transgo-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "async-trait",
  "base64",
@@ -4101,7 +4101,7 @@ dependencies = [
 
 [[package]]
 name = "transgo-gui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arboard",
  "eframe",
