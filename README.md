@@ -77,10 +77,16 @@ $ echo "good morning" | transgo          # 从 stdin 读，管道友好
 $ transgo -t ja "你好"                    # 指定目标语
 $ transgo -f en -t zh "hello"            # 同时指定源语
 $ transgo -e deepl "hello"               # 指定引擎
+$ transgo -i "采用意译" "hello"           # 翻译指令，控制文风（baidu-llm）
 $ transgo --json "hello"                 # 完整结果，便于脚本处理
 $ transgo -v "hello"                     # stderr 里附引擎、语种、耗时
 $ transgo -a "hello"                     # 附带备选译文
 ```
+
+引号是 shell 的要求，不是 transgo 的：参数不含空格可省略，含空格必须包起来。
+待译文本多词可以不引号（`transgo Knowledge is power` 会拼回整句），
+但**翻译指令含空格必须引号**：`transgo -i 采用意译 不要直译 原文` 里
+「不要直译 原文」会被当成待译文本。参数含 `$`、`!`、`*` 之类 shell 特殊字符时同理。
 
 完整选项：
 
