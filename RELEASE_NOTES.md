@@ -5,7 +5,8 @@
 
   注意正文格式：
      - **不要以 `# transgo x.y.z` 开头**。Release 页面的标题已经是版本号了，再写一遍是重复。
-     - **不要写概括性的开场白**。读者点进 Release 就是来看改动细节的，直接从 `## 新增` 开始。
+     - **不要写概括性的开场白**。读者点进 Release 就是来看改动细节的，直接从第一个章节
+       标题开始；有行为变化时 `## 行为变化` 置顶，其余从 `## 新增` 开始。
      - **双语**：中文在前，用 `---` 分隔后重复一遍英文版（英文部分的文件链接指向英文文档）。
 
   发版流程：
@@ -18,33 +19,45 @@
   同一份 workflow 能一直用下去，发新版不需要改它。
 -->
 
+## 行为变化
+
+- `auto` 方向的第三方语言（日韩俄阿等非拉丁文字）现在默认翻向**英文**，此前是翻向中文。
+  想要旧行为，一行配置即可：`default.lang = "zh"`
+
 ## 新增
 
-- GUI 界面重做：浅灰画布衬白色圆角卡片、柔和阴影的卡片式布局，悬停与聚焦用点缀色
-  描边，观感向现代工具看齐
-- 字号可配置：`gui.font_scale`（0.5 ~ 3.0，环境变量 `TRANSGO_GUI_FONT_SCALE`）。
-  笔记本屏嫌字大、外接屏嫌字小，各调一档就好
+- 第三方语言方向可配置：`default.lang`（`zh` / `en`，默认 `en`；环境变量
+  `TRANSGO_DEFAULT_LANG`）。中英之间永远互转，不受它影响
+- 英文文档：`README_EN.md` 与 `docs_en/`（引擎指南、故障排查、桌面集成、实现说明）。
+  Release 正文从此中英双语，页尾文档链接也是双语
 
-## 改进
+## 修复与改进
 
-- 顶栏瘦身：只留引擎与语向下拉，放不下自动换行；目标语「自动」的完整规则挪到悬停
-  提示，窗口最小宽度从 420 降到 330，能缩得更窄
-- 翻译按钮移到原文卡片右下角，贴着内容顺手
-- 窗口默认尺寸调整为 457 × 737
+- 文档中期体检：修正额度范围、退出码语义、窗口规则匹配方式（class 改 title）等 26 处
+  事实问题，补上「Google 超出会从绑定的卡实际扣费」的警示
+- 各引擎标注实测状态：4 个用真实请求验证过，7 个未实测
+- 欢迎提 Issues 与 PR
 
 ---
 
+## Behavior change
+
+- Third-party languages (Japanese, Korean, Russian, Arabic and other non-Latin scripts) now
+  translate to **English** by default under `auto`; previously to Chinese. The old behavior is
+  one config line away: `default.lang = "zh"`
+
 ## Added
 
-- Redesigned GUI: a card-based layout of white rounded cards with soft shadows on a light
-  gray canvas, with accent-colored outlines on hover and focus
-- Configurable font size: `gui.font_scale` (0.5 ~ 3.0, env `TRANSGO_GUI_FONT_SCALE`).
-  Turn it down on a laptop screen, up on an external monitor
+- Configurable third-language direction: `default.lang` (`zh` / `en`, default `en`; env
+  `TRANSGO_DEFAULT_LANG`). Chinese and English always swap and are unaffected
+- English documentation: `README_EN.md` and `docs_en/` (engine guide, troubleshooting,
+  desktop integration, implementation notes). Release notes are bilingual from now on, and the
+  docs links at the foot of the page come in both languages
 
-## Improved
+## Fixes and improvements
 
-- Slimmer top bar: only the engine and language dropdowns remain, and they wrap when narrow;
-  the full rule for the "auto" target language moved to a hover tip; minimum window width
-  dropped from 420 to 330
-- The translate button moved to the bottom-right of the source card, next to the content
-- Default window size is now 457 × 737
+- Mid-term documentation audit: 26 factual fixes (quota ranges, exit-code semantics, window
+  rule matching — class to title — and more), plus a warning that Google charges the bound
+  card beyond the free quota
+- Per-engine test status documented: 4 verified with real requests, 7 untested
+- Issues and PRs welcome
