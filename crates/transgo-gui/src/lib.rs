@@ -97,11 +97,12 @@ pub fn run(clip: bool) -> Result<(), String> {
 
     let cfg = Config::load().map_err(|e| e.to_string())?;
     let engines = engine::build_all(&cfg);
+    let font_scale = cfg.gui.font_scale.unwrap_or(1.0).clamp(0.5, 3.0) as f32;
 
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([620.0, 460.0])
-            .with_min_inner_size([420.0, 280.0]),
+            .with_inner_size([457.0, 737.0])
+            .with_min_inner_size([330.0, 300.0]),
         ..Default::default()
     };
 
@@ -110,7 +111,7 @@ pub fn run(clip: bool) -> Result<(), String> {
         options,
         Box::new(move |cc| {
             install_fonts(&cc.egui_ctx);
-            setup_style(&cc.egui_ctx);
+            setup_style(&cc.egui_ctx, font_scale);
             let (msg_tx, msg_rx) = mpsc::channel();
             {
                 let ctx = cc.egui_ctx.clone();
@@ -353,12 +354,13 @@ impl eframe::App for App {
         egui::CentralPanel::default()
             .frame(egui::Frame {
                 // 必须显式给不透明的填充：Frame::default() 是透明的，会透出桌面壁纸
-                fill: egui::Color32::WHITE,
+                fill: CANVAS,
                 inner_margin: egui::Margin::same(14.0),
                 ..egui::Frame::default()
             })
             .show(ctx, |ui| {
-            ui.horizontal(|ui| {
+            // 顶栏只留三个下拉：可换行 + 标签从短，窗口横向不再被撑死
+            ui.horizontal_wrapped(|ui| {
                 egui::ComboBox::from_id_source("engine")
                     .selected_text(
                         self.engines
@@ -376,22 +378,9 @@ impl eframe::App for App {
 
                 lang_combo(ui, "从", &mut self.from, true);
                 lang_combo(ui, "到", &mut self.to, false);
-
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let btn = egui::Button::new(egui::RichText::new("翻译").color(egui::Color32::WHITE))
-                        .fill(ACCENT);
-                    if ui.add_enabled(!self.busy, btn).clicked() {
-                        self.start_translate();
-                    }
-                    if self.busy {
-                        ui.spinner();
-                    }
-                });
             });
 
-            ui.add_space(6.0);
-            ui.separator();
-            ui.add_space(4.0);
+            ui.add_space(2.0);
 
             ui.collapsing("翻译指令（可选）", |ui| {
                 ui.add(
@@ -402,45 +391,74 @@ impl eframe::App for App {
             });
             ui.add_space(2.0);
 
-            // 字符数给个直观读数：两家百度接口都按源字符计费
-            ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("原文").strong());
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(
-                        egui::RichText::new(format!("{} 字符", self.source.chars().count()))
-                            .color(META),
-                    );
+            // 原文卡片：标题行（含字符数）、文本区、右下角主操作
+            card().show(ui, |ui| {
+                // 字符数给个直观读数：两家百度接口都按源字符计费
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("原文").strong());
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(
+                            egui::RichText::new(format!("{} 字符", self.source.chars().count()))
+                                .color(META),
+                        );
+                    });
+                });
+                ui.add_space(4.0);
+
+                let source_edit = ui.add(
+                    egui::TextEdit::multiline(&mut self.source)
+                        .desired_rows(8)
+                        .desired_width(f32::INFINITY)
+                        .frame(false)
+                        .hint_text("输入要翻译的文本，回车翻译，Shift + 回车换行"),
+                );
+                if self.focus_source {
+                    source_edit.request_focus();
+                    self.focus_source = false;
+                }
+
+                // 主按钮贴着内容放：顺手，也免得顶栏被撑宽
+                ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        let btn = egui::Button::new(
+                            egui::RichText::new("翻译").color(egui::Color32::WHITE),
+                        )
+                        .fill(ACCENT);
+                        if ui.add_enabled(!self.busy, btn).clicked() {
+                            self.start_translate();
+                        }
+                        if self.busy {
+                            ui.spinner();
+                        }
+                    });
                 });
             });
-
-            let source_edit = ui.add(
-                egui::TextEdit::multiline(&mut self.source)
-                    .desired_rows(8)
-                    .desired_width(f32::INFINITY)
-                    .hint_text("输入要翻译的文本，回车翻译，Shift + 回车换行"),
-            );
-            if self.focus_source {
-                source_edit.request_focus();
-                self.focus_source = false;
-            }
 
             if enter {
                 self.start_translate();
             }
 
-            ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("译文").strong());
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(egui::RichText::new(&self.status).color(META));
+            ui.add_space(10.0);
+
+            // 译文卡片：标题行带状态（引擎 · 语向 · 耗时）
+            card().show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("译文").strong());
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(egui::RichText::new(&self.status).color(META));
+                    });
                 });
+                ui.add_space(4.0);
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.output)
+                        .desired_rows(8)
+                        .desired_width(f32::INFINITY)
+                        .frame(false)
+                        .hint_text("译文会显示在这里"),
+                );
             });
 
-            ui.add(
-                egui::TextEdit::multiline(&mut self.output)
-                    .desired_rows(8)
-                    .desired_width(f32::INFINITY)
-                    .hint_text("译文会显示在这里"),
-            );
+            ui.add_space(4.0);
 
             ui.horizontal(|ui| {
                 if ui.button("复制译文").clicked() {
@@ -468,18 +486,20 @@ impl eframe::App for App {
 }
 
 fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
+    // 展示文字从短：「自动（中→英，其余→中）」能把顶栏撑爆，规则挪到悬停提示里
     let text = if *sel == Lang::Auto {
         if is_from {
             "自动检测".to_string()
         } else {
-            "自动（中→英，其余→中）".to_string()
+            "自动".to_string()
         }
     } else {
         sel.name_zh().to_string()
     };
-    egui::ComboBox::from_id_source(format!("lang-{label}"))
+    let resp = egui::ComboBox::from_id_source(format!("lang-{label}"))
         .selected_text(text)
         .show_ui(ui, |ui| {
+            // 下拉展开后放完整说明，宽度不受顶栏约束
             let auto = if is_from {
                 "自动检测"
             } else {
@@ -490,64 +510,97 @@ fn lang_combo(ui: &mut egui::Ui, label: &str, sel: &mut Lang, is_from: bool) {
                 ui.selectable_value(sel, *l, l.name_zh());
             }
         });
+    if !is_from {
+        resp.response
+            .on_hover_text("目标语「自动」：中文译英文，其余译中文");
+    }
 }
 
 // --------------------------------------------------------------------- 外观
 
-/// 点缀色：翻译主按钮
+/// 点缀色：翻译主按钮、悬停与聚焦描边
 const ACCENT: egui::Color32 = egui::Color32::from_rgb(52, 112, 214);
-/// 元信息（字符数、状态行）用的中间灰，比 weak 更清楚一点
-const META: egui::Color32 = egui::Color32::from_gray(110);
+/// 元信息（字符数、状态行）的灰
+const META: egui::Color32 = egui::Color32::from_gray(125);
+/// 窗口画布：浅灰，衬托白色卡片
+const CANVAS: egui::Color32 = egui::Color32::from_rgb(243, 245, 249);
+/// 卡片与控件的描边
+const BORDER: egui::Color32 = egui::Color32::from_rgb(222, 227, 235);
 
-/// 浅色主题 + 大字号 + 明确的控件边框。egui 默认深底灰字、字号偏小、
-/// 文本框边框几乎不可见，这里统一调掉。
-fn setup_style(ctx: &egui::Context) {
+/// 卡片：白底、圆角、细描边、柔和阴影。现代感主要靠它
+fn card() -> egui::Frame {
+    egui::Frame {
+        fill: egui::Color32::WHITE,
+        stroke: egui::Stroke::new(1.0_f32, BORDER),
+        rounding: egui::Rounding::same(8.0),
+        inner_margin: egui::Margin::same(12.0),
+        shadow: egui::epaint::Shadow {
+            offset: egui::vec2(0.0, 1.0),
+            blur: 6.0,
+            spread: 0.0,
+            color: egui::Color32::from_black_alpha(16),
+        },
+        ..egui::Frame::default()
+    }
+}
+
+/// 浅色卡片主题 + 可缩放字号。`font_scale` 在高分屏嫌字大、外接屏嫌字小时调。
+fn setup_style(ctx: &egui::Context, font_scale: f32) {
     let mut style = (*ctx.style()).clone();
     style.visuals = egui::Visuals::light();
-    // 纯白底，不透桌面
-    style.visuals.panel_fill = egui::Color32::WHITE;
+    // 画布浅灰、不透桌面（Frame 透明填充会透出壁纸，必须显式给色）
+    style.visuals.panel_fill = CANVAS;
+    style.visuals.window_fill = CANVAS;
 
-    // 下拉框、按钮统一最小高度，避免顶栏参差
-    style.spacing.interact_size.y = 36.0;
-
-    // 文本框、下拉框的默认边框太淡，加深一点，顺带统一圆角
-    let border = egui::Stroke::new(1.0_f32, egui::Color32::from_gray(150));
-    let rounding = egui::Rounding::same(4.0);
+    // 控件圆角 6px、描边柔和；悬停/聚焦用点缀色描边
+    let border = egui::Stroke::new(1.0_f32, BORDER);
+    let rounding = egui::Rounding::same(6.0);
     for w in [
         &mut style.visuals.widgets.noninteractive,
         &mut style.visuals.widgets.inactive,
-        &mut style.visuals.widgets.hovered,
-        &mut style.visuals.widgets.active,
     ] {
         w.bg_stroke = border;
         w.rounding = rounding;
     }
+    for w in [
+        &mut style.visuals.widgets.hovered,
+        &mut style.visuals.widgets.active,
+    ] {
+        w.bg_stroke = egui::Stroke::new(1.0_f32, ACCENT);
+        w.rounding = rounding;
+    }
 
-    // 控件之间松一点
+    // 文本选区与超链接跟随点缀色
+    style.visuals.selection.bg_fill = egui::Color32::from_rgba_unmultiplied(52, 112, 214, 60);
+    style.visuals.hyperlink_color = ACCENT;
+
+    // 下拉框、按钮统一最小高度，间距松一点
+    style.spacing.interact_size.y = 36.0;
     style.spacing.item_spacing = egui::vec2(10.0, 10.0);
-    style.spacing.button_padding = egui::vec2(12.0, 6.0);
+    style.spacing.button_padding = egui::vec2(14.0, 7.0);
 
-    // 字号整体加大一档
+    // 字号 = 基准值 × font_scale
+    let s = font_scale;
     style.text_styles = [
         (
             egui::TextStyle::Heading,
-            egui::FontId::new(24.0, egui::FontFamily::Proportional),
+            egui::FontId::new(24.0 * s, egui::FontFamily::Proportional),
         ),
         (
             egui::TextStyle::Body,
-            egui::FontId::new(18.0, egui::FontFamily::Proportional),
+            egui::FontId::new(18.0 * s, egui::FontFamily::Proportional),
         ),
         (
             egui::TextStyle::Button,
-            egui::FontId::new(18.0, egui::FontFamily::Proportional),
+            egui::FontId::new(18.0 * s, egui::FontFamily::Proportional),
         ),
         (
             egui::TextStyle::Small,
-            egui::FontId::new(14.0, egui::FontFamily::Proportional),
+            egui::FontId::new(14.0 * s, egui::FontFamily::Proportional),
         ),
         (
             egui::TextStyle::Monospace,
-            egui::FontId::new(17.0, egui::FontFamily::Monospace),
+            egui::FontId::new(17.0 * s, egui::FontFamily::Monospace),
         ),
     ]
     .into();

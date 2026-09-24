@@ -245,6 +245,9 @@ api_key = ""
 base_url = "https://api.openai.com/v1"
 model = "gpt-4o-mini"
 # system_prompt = ""   # 可覆盖默认提示词，用来固定术语表或语气
+
+[gui]
+font_scale = 1.0           # 字体缩放（0.5 ~ 3.0），笔记本/外接屏字号不一致时调
 ```
 
 环境变量优先于配置文件，方便脚本临时覆盖：
