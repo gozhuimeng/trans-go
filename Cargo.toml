@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/transgo-core", "crates/transgo-cli", "crates/transgo-gui"]
 
 [workspace.package]
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/gozhuimeng/trans-go"
