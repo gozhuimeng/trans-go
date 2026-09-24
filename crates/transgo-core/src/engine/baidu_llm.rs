@@ -26,6 +26,10 @@ pub struct BaiduLlm {
     app_id: String,
     secret: String,
     api_key: String,
+    /// 默认翻译指令，请求里带了就用请求的
+    reference: String,
+    /// 术语库干预开关
+    need_intervene: bool,
 }
 
 impl BaiduLlm {
@@ -35,6 +39,8 @@ impl BaiduLlm {
             app_id: cfg.app_id.clone().unwrap_or_default(),
             secret: cfg.secret.clone().unwrap_or_default(),
             api_key: cfg.api_key.clone().unwrap_or_default(),
+            reference: cfg.reference.clone().unwrap_or_default(),
+            need_intervene: cfg.need_intervene.unwrap_or(false),
         }
     }
 }
@@ -73,6 +79,20 @@ impl Engine for BaiduLlm {
             "to": Baidu::code(req.to),
             "model_type": "llm",
         });
+
+        // 翻译指令：请求里带的优先，其次用配置的默认指令。上限 500 字符（超出报 59002）
+        let instruction = req
+            .instruction
+            .as_deref()
+            .unwrap_or(self.reference.as_str())
+            .trim();
+        if !instruction.is_empty() {
+            body["reference"] = serde_json::Value::String(instruction.to_string());
+        }
+        // 术语库干预：术语表在控制台「我的术语库」维护，功能本身不额外收费
+        if self.need_intervene {
+            body["needIntervene"] = serde_json::Value::from(1);
+        }
 
         let mut call = self.client.post(ENDPOINT).header("Content-Type", "application/json");
         if self.api_key.is_empty() {

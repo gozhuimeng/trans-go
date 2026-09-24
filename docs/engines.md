@@ -206,8 +206,13 @@ $ transgo config set aliyun.access_key_secret 你的AccessKeySecret
 独立接口 `ait/api/aiTextTranslate`，`model_type` 固定取 `llm`。同一个接口也能取 `nmt`
 调机器翻译模型，但 transgo 的机器翻译走的是上面的通用翻译 API，不经这个接口。
 QPS 10，单次上限 6000 字符，官方建议单次 2000 字符以内。
-翻译指令（`reference` 参数，如「采用意译」）和术语库干预免费开放，
-transgo 暂未暴露这两个参数。
+翻译指令（`reference` 参数，如「采用意译」）和术语库干预免费开放，不另行收费：
+
+- **翻译指令**：单次用 `transgo -e baidu-llm -i "采用意译" "原文"` 指定，
+  或配置 `baidu.reference` 作为默认文风；GUI 在「翻译指令」折叠区里填。
+  上限 500 字符，超出报 `59002`
+- **术语库**：控制台「我的术语库」上传术语对照表后，配置 `baidu.need_intervene = true`，
+  译文即按术语表输出。功能本身不额外收费
 
 鉴权两种任选：
 
@@ -395,6 +400,7 @@ $ transgo config set youdao.app_secret 你的应用密钥
 | 火山 | `volcano.access_key_id` / `volcano.secret_access_key` | `TRANSGO_VOLCANO_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` |
 | 阿里云 | `aliyun.access_key_id` / `aliyun.access_key_secret` | `TRANSGO_ALIYUN_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` |
 | 百度（两个接口共用） | `baidu.app_id` / `baidu.secret` / `baidu.api_key` | `TRANSGO_BAIDU_APP_ID` / `_SECRET` / `_API_KEY` |
+| | `baidu.reference` / `baidu.need_intervene` | `TRANSGO_BAIDU_REFERENCE` / `_NEED_INTERVENE` |
 | Azure | `azure.api_key` / `azure.region` | `TRANSGO_AZURE_API_KEY` / `TRANSGO_AZURE_REGION` |
 | Google | `google.api_key` | `TRANSGO_GOOGLE_API_KEY` |
 | 有道 | `youdao.app_key` / `youdao.app_secret` | `TRANSGO_YOUDAO_APP_KEY` / `_APP_SECRET` |

@@ -81,6 +81,11 @@ pub struct BaiduCfg {
     /// API Key 鉴权（Bearer），控制台「API Key 管理」创建。
     /// 填了它 `baidu-llm` 就免 MD5 签名；`baidu` 通用翻译仍走签名
     pub api_key: Option<String>,
+    /// 翻译指令（仅 `baidu-llm` 生效），如「采用意译」，上限 500 字符。
+    /// 每次调用可用 CLI 的 --instruction 覆盖
+    pub reference: Option<String>,
+    /// 术语库干预开关（仅 `baidu-llm` 生效），术语表在控制台「我的术语库」维护
+    pub need_intervene: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -199,6 +204,14 @@ impl Config {
         overlay!(self.baidu.app_id, "TRANSGO_BAIDU_APP_ID");
         overlay!(self.baidu.secret, "TRANSGO_BAIDU_SECRET");
         overlay!(self.baidu.api_key, "TRANSGO_BAIDU_API_KEY");
+        overlay!(self.baidu.reference, "TRANSGO_BAIDU_REFERENCE");
+        if let Ok(v) = std::env::var("TRANSGO_BAIDU_NEED_INTERVENE") {
+            match v.trim() {
+                "1" | "true" => self.baidu.need_intervene = Some(true),
+                "0" | "false" => self.baidu.need_intervene = Some(false),
+                _ => {}
+            }
+        }
         overlay!(self.aliyun.access_key_id, "TRANSGO_ALIYUN_ACCESS_KEY_ID");
         overlay!(self.aliyun.access_key_secret, "TRANSGO_ALIYUN_ACCESS_KEY_SECRET");
         overlay!(self.volcano.access_key_id, "TRANSGO_VOLCANO_ACCESS_KEY_ID");

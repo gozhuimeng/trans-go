@@ -12,6 +12,9 @@ pub struct Request {
     pub from: Option<Lang>,
     /// 目标语种
     pub to: Lang,
+    /// 翻译指令：告诉引擎「怎么译」（文风、场景之类），如「采用意译」。
+    /// 仅支持的引擎读取，不认的忽略
+    pub instruction: Option<String>,
 }
 
 impl Request {
@@ -25,7 +28,13 @@ impl Request {
             Some(l) if l != Lang::Auto => l,
             _ => crate::detect::auto_target(&text),
         };
-        Request { text, from, to }
+        Request { text, from, to, instruction: None }
+    }
+
+    /// 附上翻译指令。空串与 `None` 等价，表示用引擎默认风格。
+    pub fn with_instruction(mut self, instruction: Option<String>) -> Request {
+        self.instruction = instruction.filter(|s| !s.trim().is_empty());
+        self
     }
 }
 

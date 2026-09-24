@@ -94,14 +94,15 @@ Arguments:
   [TEXT]...  要翻译的文本，不传或传 - 则从 stdin 读取；以 - 开头的文本放到 -- 之后
 
 Options:
-  -t, --to <LANG>     目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文
-  -f, --from <LANG>   源语种，不填就自动检测
-  -e, --engine <ID>   翻译引擎，不填则取第一个已配置的
-  -j, --json          用 JSON 输出完整结果
-  -a, --alternatives  备选译文打到 stderr，stdout 保持干净好接管道
-  -v, --verbose       在 stderr 附上引擎、语种和耗时
-  -h, --help          Print help
-  -V, --version       Print version
+  -t, --to <LANG>           目标语种，如 zh / en / ja；auto = 中文译英文，其余译中文
+  -f, --from <LANG>         源语种，不填就自动检测
+  -e, --engine <ID>         翻译引擎，不填则取第一个已配置的
+  -i, --instruction <TEXT>  翻译指令，控制文风（仅 baidu-llm 生效），如「采用意译」
+  -j, --json                用 JSON 输出完整结果
+  -a, --alternatives        备选译文打到 stderr，stdout 保持干净好接管道
+  -v, --verbose             在 stderr 附上引擎、语种和耗时
+  -h, --help                Print help
+  -V, --version             Print version
 ```
 
 ### 其他子命令

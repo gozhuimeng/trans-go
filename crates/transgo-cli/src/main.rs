@@ -141,6 +141,10 @@ struct TranslateArgs {
     #[arg(short = 'e', long = "engine", value_name = "ID")]
     engine: Option<String>,
 
+    /// 翻译指令，控制文风（仅 baidu-llm 生效），如「采用意译」
+    #[arg(short = 'i', long = "instruction", value_name = "TEXT")]
+    instruction: Option<String>,
+
     /// 用 JSON 输出完整结果
     #[arg(short = 'j', long = "json")]
     json: bool,
@@ -247,7 +251,7 @@ async fn cmd_translate(a: TranslateArgs) -> Result<(), Error> {
     let cfg = Config::load()?;
     let from = parse_lang(a.from.as_deref().or(cfg.default.from.as_deref()))?;
     let to = parse_lang(a.to.as_deref().or(cfg.default.to.as_deref()))?;
-    let req = Request::new(text, from, to);
+    let req = Request::new(text, from, to).with_instruction(a.instruction);
 
     let eng: Arc<dyn Engine> = match a.engine.as_deref() {
         Some(id) => engine::lookup(&cfg, id)?,
@@ -504,6 +508,10 @@ app_id = ""
 secret = ""
 # 可选：API Key 鉴权（控制台「API Key 管理」创建）。baidu-llm 填了就走 Bearer 免签名
 # api_key = ""
+# 可选：翻译指令（仅 baidu-llm），如「采用意译」，控制默认文风，单次可用 --instruction 覆盖
+# reference = ""
+# 可选：术语库干预（仅 baidu-llm）。术语表在控制台「我的术语库」维护，功能免费
+# need_intervene = false
 
 # ---- Azure AI Translator：200 万字符/月（需绑卡）----
 # https://azure.microsoft.com/zh-cn/products/ai-services/ai-translator

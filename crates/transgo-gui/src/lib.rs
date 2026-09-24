@@ -93,6 +93,7 @@ struct App {
     to: Lang,
     source: String,
     output: String,
+    instruction: String,
     status: String,
     error: Option<String>,
     busy: bool,
@@ -119,6 +120,7 @@ impl App {
             to: Lang::Auto,
             source: preset.clone().unwrap_or_default(),
             output: String::new(),
+            instruction: String::new(),
             status: String::new(),
             error: None,
             busy: false,
@@ -137,7 +139,8 @@ impl App {
         if self.busy || self.source.trim().is_empty() {
             return;
         }
-        let req = Request::new(self.source.clone(), Some(self.from), Some(self.to));
+        let req = Request::new(self.source.clone(), Some(self.from), Some(self.to))
+            .with_instruction(Some(self.instruction.clone()));
         let Some(eng) = self.engines.get(self.engine_idx) else {
             self.error = Some("没有可用引擎，先用 transgo config 填入 API Key".into());
             return;
@@ -275,6 +278,15 @@ impl eframe::App for App {
             ui.add_space(6.0);
             ui.separator();
             ui.add_space(4.0);
+
+            ui.collapsing("翻译指令（可选）", |ui| {
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.instruction)
+                        .desired_width(f32::INFINITY)
+                        .hint_text("例如：采用意译、用学术风格。仅大模型翻译生效，留空为默认风格"),
+                );
+            });
+            ui.add_space(2.0);
 
             // 字符数给个直观读数：两家百度接口都按源字符计费
             ui.horizontal(|ui| {
