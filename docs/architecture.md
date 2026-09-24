@@ -263,7 +263,7 @@ $ cargo test
 
 ```console
 $ cargo test
-$ cargo clippy --all-targets
+$ cargo clippy --locked --all-targets -- -D warnings    # 与 CI 同款，本地过 = CI 过
 $ cargo build --release
 $ transgo engines            # 确认没有 warning 引起的行为变化
 $ transgo lang | head -3     # 确认 SIGPIPE 修复还在
